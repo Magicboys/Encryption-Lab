@@ -94,8 +94,16 @@ void EncryptString(string originalString, string& encryptedString) {
         }
     }
 
-    //TODO: WITHIN A 10 rep loop
-    //TODO: FILL IN S-BOX *sigh* https://en.wikipedia.org/wiki/Rijndael_S-box
+    //Debug
+    for (int i = 0; i < 4; i++) {
+        cout << "[";
+        for (int j = 0; j < 4; j++) {
+            cout << state[i][j] << ", ";
+        }
+        cout << "]" << endl;
+    }
+
+    //S-BOX
     string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "30", "01", "67", "2b", "fe", "d7", "ab", "76"},
                             {"ca", "82", "c9", "7d","fa", "59", "47", "f0", "ad", "d4", "a2", "af", "9c", "a4", "72", "c0"},
                             {"b7", "fd", "93", "26","36", "3f", "f7", "cc", "34", "a5", "e5", "f1", "71", "d8", "31", "15"},
@@ -112,23 +120,30 @@ void EncryptString(string originalString, string& encryptedString) {
                             {"70", "3e", "b5", "66","48", "03", "f6", "0e", "61", "35", "57", "b9", "86", "c1", "1d", "9e"},
                             {"e1", "f8", "98", "11","69", "d9", "8e", "94", "9b", "1e", "87", "e9", "cd", "55", "28", "df"},
                             {"8c", "a1", "89", "0d","bf", "e6", "42", "68", "41", "99", "2d", "0f", "b0", "54", "bb", "16"}};
-    //TODO: 1. SUB BYTE STEP
-
-
+    //SUB BYTE STEP
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            int x = stoi(state[i][j].substr(0,1), nullptr, 16);
+            int y = stoi(state[i][j].substr(1,1), nullptr, 16);
+            state[i][j] = SBOX[x][y];
+        }
+    }
     //TODO: 2. SHIFT ROW STEP
+    
 
     //TODO: 3. MIX COLUMNS STEP
 
     //TODO: 4. ADD ROUND KEY
 
     //Debug
-//    for (int i = 0; i < 4; i++) {
-//        cout << "[";
-//        for (int j = 0; j < 4; j++) {
-//            cout << state[i][j] << ", ";
-//        }
-//        cout << "]" << endl;
-//    }
+    cout << "====================" << endl;
+    for (int i = 0; i < 4; i++) {
+        cout << "[";
+        for (int j = 0; j < 4; j++) {
+            cout << state[i][j] << ", ";
+        }
+        cout << "]" << endl;
+    }
 
 }
 
