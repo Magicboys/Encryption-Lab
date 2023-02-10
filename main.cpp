@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <bitset>
 
 using namespace std;
 using std::cout;
@@ -32,8 +33,9 @@ string** MixedColumns(string** state);
 
 //Helper methods
 void HexToBinary(int original, int& binaryValue);
+string BinaryToHex(const string& binaryString);
 void PrintArrayDebug(string** state);
-unsigned char GalosisFieldBinaryMultiplication(unsigned char a, unsigned char b);
+string GalosisFieldBinaryMultiplication(unsigned int a, unsigned int b);
 
 //Global Constants
 //S-BOX
@@ -57,6 +59,19 @@ const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "3
 
 int main(int argc, char* argv[]) {
     bool continueProgram = true;
+//    int i = stoi("01", nullptr, 16);
+//    int j = stoi("8C", nullptr, 16);
+//    int mixColBinary = 0;
+//    int originalColBinary = 0;
+//
+//    HexToBinary(i, originalColBinary);
+//    HexToBinary(j, mixColBinary);
+//    cout << mixColBinary << endl;
+//    cout << originalColBinary << endl;
+//    unsigned int val =  GalosisFieldBinaryMultiplication(mixColBinary, originalColBinary);
+//    cout <<"RESULT: " << val << endl;
+
+
     while (continueProgram) {
         cout << "===================================" << endl;
         cout << "What option would you like?" << endl;
@@ -122,10 +137,10 @@ void EncryptString(string originalString, string& encryptedString) {
 //    state = ShiftRows(state);
 
     //TODO: 3. MIX COLUMNS STEP
-    string testData[4][4] = {{"d4", "e0", "b8", "1e"},
-                              {"bf", "b4", "41", "27"},
-                              {"5d", "52", "11", "98"},
-                              {"30", "ae", "f1", "e5"}};
+    string testData[4][4] = {{"87", "f2", "4d", "97"},
+                              {"6E", "4c", "90", "ec"},
+                              {"46", "e7", "4a", "c3"},
+                              {"a6", "8c", "d8", "95"}};
     for (int i = 0; i < 4; i++) {
         for (int j  = 0; j < 4; j++) {
             state[i][j] = testData[i][j];
@@ -155,14 +170,14 @@ string** MixedColumns(string** state) {
                               {"01", "01", "02", "03"},
                               {"03", "01", "01", "02"}};
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 1; i++) {
         //Grab original col and turn into a binary number
         int originalCol[4];
         int mixColumnKeys[4];
-        int multipliedResults[4];
+        string multipliedResults[4];
         string mixedCol[4];
 
-        for (int k = 0; k < 4; k++) {
+        for (int k = 0; k < 1; k++) {
             for (int j = 0; j < 4; j++) {
                 originalCol[j] = stoi(state[j][i], nullptr, 16);
                 mixColumnKeys[j] = stoi(mixColKey[k][j], nullptr, 16);
@@ -171,21 +186,21 @@ string** MixedColumns(string** state) {
 
                 HexToBinary(originalCol[j], originalColBinary);
                 HexToBinary(mixColumnKeys[j], mixColBinary);
-                cout << "[" << state[j][i] << " " << mixColKey[k][j] << "] ";
-
-                //Bug is in the handling of the GalosisFieldBinaryMultiplication
-                multipliedResults[j] = GalosisFieldBinaryMultiplication(originalColBinary, mixColBinary);
+                multipliedResults[j] = GalosisFieldBinaryMultiplication(mixColBinary, originalColBinary);
+                cout << "[" << mixColKey[k][j] << " " << state[j][i] << " RESULT: " << multipliedResults[j] << " " << BinaryToHex(multipliedResults[j]) << "] ";
             }
-            cout << "[RESULT]" << endl;
+            cout << endl;
 
             ostringstream oss;
             string hex_representation;
-            oss << std::hex << (multipliedResults[0] ^ multipliedResults[1] ^ multipliedResults[2] ^ multipliedResults[3]);
-            mixedCol[k] = oss.str();
+            string newStateVal = "";
+//            for (int i = 0; i < 4; i++)
+//            oss << std::hex << (multipliedResults[0] ^ multipliedResults[1] ^ multipliedResults[2] ^ multipliedResults[3]);
+//            mixedCol[k] = oss.str();
         }
         cout << "{ ";
         for (int j = 0; j < 4; j++) {
-            cout << state[j][i] << " ";
+            cout << "OLD: " << state[j][i] << " NEW: " << mixedCol[j];
             state[j][i] = mixedCol[j];
         }
         cout << "}" << endl;
@@ -195,34 +210,57 @@ string** MixedColumns(string** state) {
 
 // Galois Field (2^8) Binary Multiplication
 // 0x80 = 10000000 & 0xFF = 11111111
-unsigned char GalosisFieldBinaryMultiplication(unsigned char numOne, unsigned char numTwo) {
-    unsigned char returnVal = 0;
-
-    //Loop 8 times to properly perform the binary multiplication
-    for (int i = 0; i < 8; ++i) {
-        //If the least significant bit of numberTwo is set then XOR numOne
-        //True if numTwo AND 1 is non-zero
-        if (numTwo & 1) {
-            returnVal ^= numOne;
+string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo) {
+    //cout << numOne << " " << numTwo << " " << (numOne*numTwo) << endl;
+    string product = std::to_string((numOne*numTwo));
+    string newProduct = "";
+    for (int i = 0; i < product.length(); i++) {
+        if (product[i] == '0') {
+            newProduct += product[i];
+        } else if (product[i] == '1') {
+            newProduct += product[i];
+        } else {
+            if ((std::stoi(std::to_string(product[i])) % 2) == 0) {
+                newProduct += "0";
+            } else {
+                newProduct += "1";
+            }
         }
-
-        //If the most significant bit of numOne is set then set high bit to true
-        bool highBit = (numOne & 0x80);
-
-        //Bit shift numOne left one bit then perform an AND operation between numOne and "11111111"
-        numOne = (numOne << 1) & 0xFF;
-
-        //If highBit was determined to be true then XOR numOne with "11011" binary constant
-        if (highBit) {
-            numOne ^= 0x1b;
-        }
-
-        //Shift right numTwo by one bit
-        numTwo >>= 1;
     }
 
-    //Return the result
-    return returnVal;
+    if (stoi(newProduct) > 11111111) {
+        newProduct = newProduct.substr(1,8);
+        string polyTheorem = "00011011";
+        string result = "";
+        for (int i = 0; i < 8; i++) {
+            if ((polyTheorem[i] == '1') && (newProduct[i] == '1')) {
+                result += "0";
+            } else if (((polyTheorem[i] == '0') && (newProduct[i] == '1')) || ((polyTheorem[i] == '1') && (newProduct[i] == '0'))) {
+                result += "1";
+            } else {
+                result += "0";
+            }
+        }
+
+        if (result.length() != 8) {
+            string temp = "";
+            for(int i = 0; i <= (8-result.length()); i++) {
+                temp += "0";
+            }
+            temp += result;
+        }
+        return result;
+    } else {
+        if (newProduct.length() < 8) {
+            string temp = "";
+            for(int i = 0; i < (8-newProduct.length()); i++) {
+                temp += "0";
+            }
+            temp += newProduct;
+            newProduct = temp;
+        }
+        return newProduct;
+    }
 }
 
 //Encryption AddRoundKey Step
@@ -304,6 +342,15 @@ void HexToBinary(int original, int& binaryValue) {
         binaryValue = binaryValue+remainder * z;
         z=z*10;
     }
+}
+
+string BinaryToHex(const string& binaryString) {
+    string hex;
+    for (size_t i = 0; i < binaryString.length(); i += 4) {
+        std::bitset<4> nibble(binaryString.substr(i,4));
+        hex += nibble.to_ulong() < 10 ? char(nibble.to_ulong() + '0') : char(nibble.to_ulong()-10 + 'A');
+    }
+    return hex;
 }
 
 //Purpose: takes in the name of a file and reads its contents (if the file exists)
