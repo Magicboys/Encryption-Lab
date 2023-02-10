@@ -24,6 +24,9 @@ void WriteToFile(string fileContents);
 void EncryptString(string originalString, string& encryptedString);
 void decryptString(string encryptedString, string& decryptedString);
 
+//Helper methods
+void HexToBinary(int original, int& binaryValue);
+
 //Global Constants
 //S-BOX
 const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "30", "01", "67", "2b", "fe", "d7", "ab", "76"},
@@ -49,8 +52,8 @@ int main(int argc, char* argv[]) {
     while (continueProgram) {
         cout << "===================================" << endl;
         cout << "What option would you like?" << endl;
-        cout << "Type '1' to encrypt a file." << endl;
-        cout << "Type '2' to decrypt a file." << endl;
+        cout << "Type '1' to AES Encrypt a file." << endl;
+        cout << "Type '2' to AES Decrypt a file." << endl;
         cout << "Type '3' to exit the program." << endl;
 
         string userInput;
@@ -126,15 +129,6 @@ void EncryptString(string originalString, string& encryptedString) {
         }
     }
 
-    //TODO: DEBUG (Remove Later)
-    for (int i = 0; i < 4; i++) {
-        cout << "[";
-        for (int j = 0; j < 4; j++) {
-            cout << state[i][j] << ", ";
-        }
-        cout << "]" << endl;
-    }
-
     //STEP 2: SHIFT ROW STEP
     for (int i = 0; i < 4; i++) {
         //Grab original row
@@ -161,19 +155,59 @@ void EncryptString(string originalString, string& encryptedString) {
     }
 
     //TODO: 3. MIX COLUMNS STEP
-
-    //STEP 4: AddRoundKey
-    //TODO: Later we should make the key matrix, but this is simple for now
-    string stepFourKey[4] = {"d", "49", "32", "b4"};
+    //TODO: DEBUG (Remove Later)
     for (int i = 0; i < 4; i++) {
+        cout << "[";
         for (int j = 0; j < 4; j++) {
-            int a = stoi(stepFourKey[j], nullptr, 16);
-            int b = stoi(state[i][j], nullptr, 16);
-            ostringstream oss;
-            string hex_representation;
-            oss << std::hex << int((a+b));
-            string hex_sum = oss.str();
-            state[i][j] = hex_sum;
+            cout << state[i][j] << ", ";
+        }
+        cout << "]" << endl;
+    }
+
+    string mixColKey[4][4] = {{"02", "03", "01", "01"},
+                           {"01", "02", "03", "01"},
+                           {"01", "01", "02", "03"},
+                           {"03", "01", "01", "02"}};
+
+    for (int i = 0; i < 1; i++) {
+        //Grab original col
+        string originalCol[4] = {"d4", "bf", "5d", "30"};
+//        for (int j = 0; j < 4; j++) {
+//            originalCol[j] = state[j][i];
+//        }
+//        cout <<"NEXT COL!" << originalCol[0] << endl;
+
+        //Shift the bytes
+        string mixedCol[4];
+        for (int j = 0; j < 4; j++) {
+            //grab row to multiply againist
+            int rowSum[4];
+            cout << "MIX ROW: " << endl;
+            for (int k = 0; k < 4; k++) {
+                int mixColVal = stoi(mixColKey[j][k], nullptr, 16);
+                int originalColVal = stoi(originalCol[k], nullptr, 16);
+
+                int mixColBinary = 0;
+                int originalColBinary = 0;
+                HexToBinary(originalColVal, originalColBinary);
+                HexToBinary(mixColVal, mixColBinary);
+
+                //cout << originalCol[k] << " " << originalColBinary << " " << mixColBinary << endl;
+                //cout << mixColKey[j][k] << ":" << originalCol[k] << endl;
+                //rowSum[4] = (mixColVal * stateColVal);
+            }
+            cout << endl;
+//            int result = rowSum[0] ^ rowSum[1] ^ rowSum[3] ^ rowSum[4];
+//            ostringstream oss;
+//            string hex_representation;
+//            oss << std::hex << result;
+//            string hex_sum = oss.str();
+           // cout << "HEX SUM: " << hex_sum << endl;
+            //mixedCol[j] = rowSum;
+        }
+        //Save new mixed col
+        for (int j = 0; j < 4; j++) {
+            state[j][i] = mixedCol[j];
         }
     }
 
@@ -187,7 +221,25 @@ void EncryptString(string originalString, string& encryptedString) {
         cout << "]" << endl;
     }
 
+    //STEP 4: AddRoundKey
+    //TODO: Later we should make the key matrix, but this is simple for now
+
     //TODO: Add round ten after round loop and then return the string via pass by reference encryptedString param. Round 10 should include steps 1,2 & 4.
+}
+
+// Hexadecimal to binary conversion
+void HexToBinary(int original, int& binaryValue) {
+    binaryValue = 0;
+    int z = 1;
+    int remainder;
+    int n = original;
+    while(n!=0)
+    {
+        remainder = n % 2;
+        n = n / 2;
+        binaryValue = binaryValue+remainder * z;
+        z=z*10;
+    }
 }
 
 //Purpose: takes in the name of a file and reads its contents (if the file exists)
