@@ -24,8 +24,16 @@ void WriteToFile(string fileContents);
 void EncryptString(string originalString, string& encryptedString);
 void decryptString(string encryptedString, string& decryptedString);
 
+//Encryption Step Methods
+string** AddRoundKey(string** state);
+string** SubByte(string** state);
+string** ShiftRows(string** state);
+string** MixedColumns(string** state);
+
 //Helper methods
 void HexToBinary(int original, int& binaryValue);
+void PrintArrayDebug(string** state);
+unsigned char GalosisFieldBinaryMultiplication(unsigned char a, unsigned char b);
 
 //Global Constants
 //S-BOX
@@ -85,22 +93,139 @@ int main(int argc, char* argv[]) {
 
 
 void EncryptString(string originalString, string& encryptedString) {
-    //TODO: make the matrix based off the original string
+    //TODO: make the matrix based off the original string & deallocate array memory
     //First make original state matrix
-    string state[4][4];
-    int indexCounter = 0;
+    int rows = 4;
+    string** state = new string*[rows];
+    for (int i = 0; i < rows; ++i) {
+        state[i] = new string[4];
+    }
+
+//    int indexCounter = 0;
+//    for (int i = 0; i < 4; i++) {
+//        for (int j = 0; j < 4; j++) {
+//            ostringstream oss;
+//            string hex_representation;
+//            oss << std::hex << int(originalString[indexCounter]);
+//            hex_representation = oss.str();
+//            state[i][j] = hex_representation;
+//            indexCounter++;
+//        }
+//    }
+//
+//
+//    //STEP 0: AddRoundKey
+//    state = AddRoundKey(state);
+//    //STEP 1: SUB BYTE STEP
+//    state = SubByte(state);
+//    //STEP 2: SHIFT ROW STEP
+//    state = ShiftRows(state);
+
+    //TODO: 3. MIX COLUMNS STEP
+    string testData[4][4] = {{"02", "03", "01", "01"},
+                              {"01", "02", "03", "01"},
+                              {"01", "01", "02", "03"},
+                              {"03", "01", "01", "02"}};
     for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            ostringstream oss;
-            string hex_representation;
-            oss << std::hex << int(originalString[indexCounter]);
-            hex_representation = oss.str();
-            state[i][j] = hex_representation;
-            indexCounter++;
+        for (int j  = 0; j < 4; j++) {
+            state[i][j] = testData[i][j];
         }
     }
 
-    //STEP 0: AddRoundKey
+    PrintArrayDebug(state);
+    state = MixedColumns(state);
+    cout << "=======" <<endl;
+    PrintArrayDebug(state);
+
+    string testResult[4][4] = {{"04", "07", "03", "02"},
+                             {"02", "05", "07", "03"},
+                             {"03", "02", "05", "07"},
+                             {"07", "03", "02", "05"}};
+
+    //STEP 4: AddRoundKey
+
+    //TODO: Later we should make the key matrix, but this is simple for now
+
+    //TODO: Add round ten after round loop and then return the string via pass by reference encryptedString param. Round 10 should include steps 1,2 & 4.
+}
+
+string** MixedColumns(string** state) {
+    string mixColKey[4][4] = {{"02", "03", "01", "01"},
+                              {"01", "02", "03", "01"},
+                              {"01", "01", "02", "03"},
+                              {"03", "01", "01", "02"}};
+
+    for (int i = 0; i < 4; i++) {
+        //Grab original col
+        string originalCol[4];
+        for (int j = 0; j < 4; j++) {
+            originalCol[j] = state[j][i];
+        }
+
+        //Shift the bytes
+        string mixedCol[4];
+        for (int j = 0; j < 4; j++) {
+            //grab row to multiply againist
+            int multiplicationResult[4];
+            for (int k = 0; k < 4; k++) {
+                int mixColVal = stoi(mixColKey[j][k], nullptr, 16);
+                int originalColVal = stoi(originalCol[k], nullptr, 16);
+                int mixColBinary = 0;
+                int originalColBinary = 0;
+
+                HexToBinary(originalColVal, originalColBinary);
+                HexToBinary(mixColVal, mixColBinary);
+                multiplicationResult[k] = GalosisFieldBinaryMultiplication(originalColBinary, mixColBinary);
+            }
+
+            ostringstream oss;
+            string hex_representation;
+            oss << std::hex << (multiplicationResult[0] ^ multiplicationResult[1] ^ multiplicationResult[2] ^ multiplicationResult[3]);
+            string hex_sum = oss.str();
+            mixedCol[j] = oss.str();
+        }
+        //Save new mixed col
+        for (int j = 0; j < 4; j++) {
+            state[j][i] = mixedCol[j];
+        }
+    }
+    return state;
+}
+
+// Galois Field (2^8) Binary Multiplication
+// 0x80 = 10000000 & 0xFF = 11111111
+unsigned char GalosisFieldBinaryMultiplication(unsigned char numOne, unsigned char numTwo) {
+    unsigned char returnVal = 0;
+
+    //Loop 8 times to properly perform the binary multiplication
+    for (int i = 0; i < 8; ++i) {
+        //If the least significant bit of numberTwo is set then XOR numOne
+        //True if numTwo AND 1 is non-zero
+        if (numTwo & 1) {
+            returnVal ^= numOne;
+        }
+
+        //If the most significant bit of numOne is set then set high bit to true
+        bool highBit = (numOne & 0x80);
+
+        //Bit shift numOne left one bit then perform an AND operation between numOne and "11111111"
+        numOne = (numOne << 1) & 0xFF;
+
+        //If highBit was determined to be true then XOR numOne with "11011" binary constant
+        if (highBit) {
+            numOne ^= 0x1b;
+        }
+
+        //Shift right numTwo by one bit
+        numTwo >>= 1;
+    }
+
+    //Return the result
+    return returnVal;
+}
+
+//Encryption AddRoundKey Step
+string** AddRoundKey(string** state) {
     //TODO: Later we should make the key matrix, but this is simple for now
     string key[4] = {"c", "62", "61", "50"};
     for (int i = 0; i < 4; i++) {
@@ -114,13 +239,11 @@ void EncryptString(string originalString, string& encryptedString) {
             state[i][j] = hex_sum;
         }
     }
+    return state;
+}
 
-    //TODO: Encapsulate within a loop which runs steps 1-4 ten rounds
-//    for (int round = 0; round < 10; round++) {
-//
-//    }
-
-    //STEP 1: SUB BYTE STEP
+//Encryption Sub Byte Step
+string** SubByte(string** state) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
             int x = stoi(state[i][j].substr(0,1), nullptr, 16);
@@ -128,15 +251,17 @@ void EncryptString(string originalString, string& encryptedString) {
             state[i][j] = SBOX[x][y];
         }
     }
+    return state;
+}
 
-    //STEP 2: SHIFT ROW STEP
+//Encryption Shift Rows Step
+string** ShiftRows(string** state) {
     for (int i = 0; i < 4; i++) {
         //Grab original row
         string originalRow[4];
         for (int j = 0; j < 4; j++) {
             originalRow[j] = state[i][j];
         }
-
         //Shift the bytes
         string shiftedRow[4];
         int shiftedIndex = (i);
@@ -147,15 +272,15 @@ void EncryptString(string originalString, string& encryptedString) {
                 shiftedIndex = 0;
             }
         }
-
         //Save the shifted row
         for (int j = 0; j < 4; j++) {
             state[i][j] = shiftedRow[j];
         }
     }
+    return state;
+}
 
-    //TODO: 3. MIX COLUMNS STEP
-    //TODO: DEBUG (Remove Later)
+void PrintArrayDebug(string** state) {
     for (int i = 0; i < 4; i++) {
         cout << "[";
         for (int j = 0; j < 4; j++) {
@@ -163,68 +288,6 @@ void EncryptString(string originalString, string& encryptedString) {
         }
         cout << "]" << endl;
     }
-
-    string mixColKey[4][4] = {{"02", "03", "01", "01"},
-                           {"01", "02", "03", "01"},
-                           {"01", "01", "02", "03"},
-                           {"03", "01", "01", "02"}};
-
-    for (int i = 0; i < 1; i++) {
-        //Grab original col
-        string originalCol[4] = {"d4", "bf", "5d", "30"};
-//        for (int j = 0; j < 4; j++) {
-//            originalCol[j] = state[j][i];
-//        }
-//        cout <<"NEXT COL!" << originalCol[0] << endl;
-
-        //Shift the bytes
-        string mixedCol[4];
-        for (int j = 0; j < 4; j++) {
-            //grab row to multiply againist
-            int rowSum[4];
-            cout << "MIX ROW: " << endl;
-            for (int k = 0; k < 4; k++) {
-                int mixColVal = stoi(mixColKey[j][k], nullptr, 16);
-                int originalColVal = stoi(originalCol[k], nullptr, 16);
-
-                int mixColBinary = 0;
-                int originalColBinary = 0;
-                HexToBinary(originalColVal, originalColBinary);
-                HexToBinary(mixColVal, mixColBinary);
-
-                //cout << originalCol[k] << " " << originalColBinary << " " << mixColBinary << endl;
-                //cout << mixColKey[j][k] << ":" << originalCol[k] << endl;
-                //rowSum[4] = (mixColVal * stateColVal);
-            }
-            cout << endl;
-//            int result = rowSum[0] ^ rowSum[1] ^ rowSum[3] ^ rowSum[4];
-//            ostringstream oss;
-//            string hex_representation;
-//            oss << std::hex << result;
-//            string hex_sum = oss.str();
-           // cout << "HEX SUM: " << hex_sum << endl;
-            //mixedCol[j] = rowSum;
-        }
-        //Save new mixed col
-        for (int j = 0; j < 4; j++) {
-            state[j][i] = mixedCol[j];
-        }
-    }
-
-    //TODO: DEBUG (Remove Later)
-    cout << "====================" << endl;
-    for (int i = 0; i < 4; i++) {
-        cout << "[";
-        for (int j = 0; j < 4; j++) {
-            cout << state[i][j] << ", ";
-        }
-        cout << "]" << endl;
-    }
-
-    //STEP 4: AddRoundKey
-    //TODO: Later we should make the key matrix, but this is simple for now
-
-    //TODO: Add round ten after round loop and then return the string via pass by reference encryptedString param. Round 10 should include steps 1,2 & 4.
 }
 
 // Hexadecimal to binary conversion
