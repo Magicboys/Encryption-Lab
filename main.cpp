@@ -59,18 +59,6 @@ const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "3
 
 int main(int argc, char* argv[]) {
     bool continueProgram = true;
-//    int i = stoi("01", nullptr, 16);
-//    int j = stoi("8C", nullptr, 16);
-//    int mixColBinary = 0;
-//    int originalColBinary = 0;
-//
-//    HexToBinary(i, originalColBinary);
-//    HexToBinary(j, mixColBinary);
-//    cout << mixColBinary << endl;
-//    cout << originalColBinary << endl;
-//    unsigned int val =  GalosisFieldBinaryMultiplication(mixColBinary, originalColBinary);
-//    cout <<"RESULT: " << val << endl;
-
 
     while (continueProgram) {
         cout << "===================================" << endl;
@@ -94,7 +82,9 @@ int main(int argc, char* argv[]) {
 
             string fileContents = "hii friendos bla";
             string encryptedString = "";
+            //TODO: Loop through file and pass file contents to be encrypted in 16 character batches
             EncryptString(fileContents, encryptedString);
+            cout << encryptedString << endl;
         } else if (userInput == "2") {
             //Code for decrypting a file
 
@@ -128,26 +118,37 @@ void EncryptString(string originalString, string& encryptedString) {
         }
     }
 
-    PrintArrayDebug(state);
-
-    //STEP 0: AddRoundKey
+    //Before Rounds
     state = AddRoundKey(state);
-    PrintArrayDebug(state);
-    //STEP 1: Sub Byte
-    state = SubByte(state);
-    PrintArrayDebug(state);
-    //STEP 2: Shift Row
-    state = ShiftRows(state);
-    PrintArrayDebug(state);
-    //STEP 3: Mix Column
-    state = MixedColumns(state);
-    PrintArrayDebug(state);
+    cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
 
-    //STEP 4: AddRoundKey
+    //Rounds 0-9
+    for (int round = 0; round <= 9; round++) {
+        state = SubByte(state);
+        state = ShiftRows(state);
+        state = MixedColumns(state);
+        state = AddRoundKey(state);
+        cout << "ROUND " << round << " COMPLETE" << endl;
+    }
+
+    //Round 10
+    state = SubByte(state);
+    state = ShiftRows(state);
+    state = AddRoundKey(state);
+    cout << "ROUND 10 COMPLETE" << endl;
+
+    //Cipher Text
+    PrintArrayDebug(state);
+    string returnString = "";
+
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            returnString += state[i][j] + " ";
+        }
+    }
+    encryptedString = returnString;
 
     //TODO: Later we should make the key matrix, but this is simple for now
-
-    //TODO: Add round ten after round loop and then return the string via pass by reference encryptedString param. Round 10 should include steps 1,2 & 4.
 }
 
 string** MixedColumns(string** state) {
