@@ -122,10 +122,10 @@ void EncryptString(string originalString, string& encryptedString) {
 //    state = ShiftRows(state);
 
     //TODO: 3. MIX COLUMNS STEP
-    string testData[4][4] = {{"02", "03", "01", "01"},
-                              {"01", "02", "03", "01"},
-                              {"01", "01", "02", "03"},
-                              {"03", "01", "01", "02"}};
+    string testData[4][4] = {{"d4", "e0", "b8", "1e"},
+                              {"bf", "b4", "41", "27"},
+                              {"5d", "52", "11", "98"},
+                              {"30", "ae", "f1", "e5"}};
     for (int i = 0; i < 4; i++) {
         for (int j  = 0; j < 4; j++) {
             state[i][j] = testData[i][j];
@@ -155,39 +155,40 @@ string** MixedColumns(string** state) {
                               {"01", "01", "02", "03"},
                               {"03", "01", "01", "02"}};
 
-    for (int i = 0; i < 4; i++) {
-        //Grab original col
-        string originalCol[4];
-        for (int j = 0; j < 4; j++) {
-            originalCol[j] = state[j][i];
-        }
-
-        //Shift the bytes
+    for (int i = 0; i < 2; i++) {
+        //Grab original col and turn into a binary number
+        int originalCol[4];
+        int mixColumnKeys[4];
+        int multipliedResults[4];
         string mixedCol[4];
-        for (int j = 0; j < 4; j++) {
-            //grab row to multiply againist
-            int multiplicationResult[4];
-            for (int k = 0; k < 4; k++) {
-                int mixColVal = stoi(mixColKey[j][k], nullptr, 16);
-                int originalColVal = stoi(originalCol[k], nullptr, 16);
+
+        for (int k = 0; k < 4; k++) {
+            for (int j = 0; j < 4; j++) {
+                originalCol[j] = stoi(state[j][i], nullptr, 16);
+                mixColumnKeys[j] = stoi(mixColKey[k][j], nullptr, 16);
                 int mixColBinary = 0;
                 int originalColBinary = 0;
 
-                HexToBinary(originalColVal, originalColBinary);
-                HexToBinary(mixColVal, mixColBinary);
-                multiplicationResult[k] = GalosisFieldBinaryMultiplication(originalColBinary, mixColBinary);
+                HexToBinary(originalCol[j], originalColBinary);
+                HexToBinary(mixColumnKeys[j], mixColBinary);
+                cout << "[" << state[j][i] << " " << mixColKey[k][j] << "] ";
+
+                //Bug is in the handling of the GalosisFieldBinaryMultiplication
+                multipliedResults[j] = GalosisFieldBinaryMultiplication(originalColBinary, mixColBinary);
             }
+            cout << "[RESULT]" << endl;
 
             ostringstream oss;
             string hex_representation;
-            oss << std::hex << (multiplicationResult[0] ^ multiplicationResult[1] ^ multiplicationResult[2] ^ multiplicationResult[3]);
-            string hex_sum = oss.str();
-            mixedCol[j] = oss.str();
+            oss << std::hex << (multipliedResults[0] ^ multipliedResults[1] ^ multipliedResults[2] ^ multipliedResults[3]);
+            mixedCol[k] = oss.str();
         }
-        //Save new mixed col
+        cout << "{ ";
         for (int j = 0; j < 4; j++) {
+            cout << state[j][i] << " ";
             state[j][i] = mixedCol[j];
         }
+        cout << "}" << endl;
     }
     return state;
 }
