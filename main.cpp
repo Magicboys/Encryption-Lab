@@ -179,9 +179,9 @@ void EncryptString(string originalString, string& encryptedString) {
 //Performs key scheduling for sub-round key creation via utilizing the programs AES key
 string** KeyScheduler() {
     //Key Expansion Allocation
-    string** keySchedule = new string*[43];
-    for (int i = 0; i < 43; ++i) {
-        keySchedule[i] = new string[4];
+    string** keySchedule = new string*[4];
+    for (int i = 0; i < 4; ++i) {
+        keySchedule[i] = new string[43];
     }
 
     //Copy over AES key for columns W0-W3
@@ -193,22 +193,10 @@ string** KeyScheduler() {
 
     //Perform key expansion steps to generate new keys in columns W4-W43;
     int currentCol = 4;
-    cout << "ENTERING LOOP" << endl;
-    if ((currentCol <= 43)) {
-        cout << "yest" << endl;
-    } else {
-        cout << "no" << endl;
-    }
     while (currentCol <= 43) {
-        cout << "currentCol = " << currentCol << endl;
         //Copy over columns and shift the bits left one index
         string columnOne[4] = {keySchedule[1][(currentCol-4)], keySchedule[2][(currentCol-4)], keySchedule[3][(currentCol-4)], keySchedule[0][(currentCol-4)]};
         string columnTwo[4] = {keySchedule[1][(currentCol-1)], keySchedule[2][(currentCol-1)], keySchedule[3][(currentCol-1)], keySchedule[0][(currentCol-1)]};
-        cout << "{" << keySchedule[1][(currentCol-4)] << " " << keySchedule[2][(currentCol-4)] << " " << keySchedule[3][(currentCol-4)] << " " << keySchedule[0][(currentCol-4)]  << "}" << endl;
-        cout << "{" << keySchedule[1][(currentCol-1)] << " " << keySchedule[2][(currentCol-1)] << " " << keySchedule[3][(currentCol-1)] << " " << keySchedule[0][(currentCol-1)]  << "}" << endl;
-
-        cout << columnOne[4] << (columnOne[4].substr(0,1)) <<endl;
-        cout << columnTwo[4] << (columnTwo[4].substr(0,1)) << endl;
 
         //Perform SubByte with each bit
         for (int i = 0; i < 4; i++) {
@@ -222,27 +210,41 @@ string** KeyScheduler() {
 
         //XOR columnOne and columnTwo then save result
         for (int i = 0; i < 4; i++) {
-            string colOneBinary = BinaryToHex(columnOne[i]);
-            string colTwoBinary = BinaryToHex(columnTwo[i]);
+            int columnOneOriginalHex = stoi(columnOne[i], nullptr, 16);
+            int columnTwoOriginalHex = stoi(columnTwo[i], nullptr, 16);
+            int colOneBinary = 0;
+            int colTwoBinary = 0;
+
+            HexToBinary(columnOneOriginalHex, colOneBinary);
+            HexToBinary(columnTwoOriginalHex, colTwoBinary);
+
+            string colOneBinaryString = std::to_string(colOneBinary);
+            string colTwoBinaryString = std::to_string(colTwoBinary);
+
             string xorResult = "";
-//            for (int j = 0; j < 8; j++) {
-//                if ((colOneBinary[j] == '1') && (colTwoBinary[j] == '1')) {
-//                    xorResult += '0';
-//                } else if ((colOneBinary[j] == '0') && (colTwoBinary[j] == '0')) {
-//                    xorResult += '0';
-//                } else {
-//                    xorResult += '1';
-//                }
-//            }
+            for (int j = 0; j < 8; j++) {
+                if ((colOneBinaryString[j] == '1') && (colTwoBinaryString[j] == '1')) {
+                    xorResult += '0';
+                } else if ((colOneBinaryString[j] == '0') && (colTwoBinaryString[j] == '0')) {
+                    xorResult += '0';
+                } else {
+                    xorResult += '1';
+                }
+            }
 
             //Save new value to the new column
-            xorResult = "01100111";
-            keySchedule[currentCol][i] = BinaryToHex(xorResult);
+            keySchedule[i][currentCol] =  BinaryToHex(xorResult);
         }
-        cout << "COL: " + currentCol << endl;
+
+//        cout << "DEBUG!" << endl;
+//        for (int i = 0; i < 4; i++) {
+//            for (int j = 0; j < currentCol; j++) {
+//                cout << keySchedule[i][j] << " ";
+//            }
+//            cout << endl;
+//        }
         currentCol++;
     }
-    cout << "DONE!" << endl;
 
     return keySchedule;
 }
