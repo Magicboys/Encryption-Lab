@@ -32,12 +32,19 @@ string** ShiftRows(string** state);
 string** MixedColumns(string** state);
 
 //Helper methods
+string** KeyScheduler();
 void HexToBinary(int original, int& binaryValue);
 string BinaryToHex(const string& binaryString);
 void PrintArrayDebug(string** state);
 string GalosisFieldBinaryMultiplication(unsigned int a, unsigned int b);
 
 //Global Constants
+//AES Key
+const string AES_KEY [4][4] = {{"73", "73", "69", "72"},
+                               {"61", "68", "73", "69"},
+                               {"74", "63", "62", "6e"},
+                               {"69", "62", "6f", "67"}};
+
 //S-BOX
 const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "30", "01", "67", "2b", "fe", "d7", "ab", "76"},
                         {"ca", "82", "c9", "7d","fa", "59", "47", "f0", "ad", "d4", "a2", "af", "9c", "a4", "72", "c0"},
@@ -98,7 +105,6 @@ int main(int argc, char* argv[]) {
 
 
 void EncryptString(string originalString, string& encryptedString) {
-    //TODO: make the matrix based off the original string & deallocate array memory
     //First make original state matrix
     int rows = 4;
     string** state = new string*[rows];
@@ -118,37 +124,127 @@ void EncryptString(string originalString, string& encryptedString) {
         }
     }
 
-    //Before Rounds
-    state = AddRoundKey(state);
-    cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
-
-    //Rounds 0-9
-    for (int round = 0; round <= 9; round++) {
-        state = SubByte(state);
-        state = ShiftRows(state);
-        state = MixedColumns(state);
-        state = AddRoundKey(state);
-        cout << "ROUND " << round << " COMPLETE" << endl;
+    //Perform Key Scheduling
+    string** keySchedule =  KeyScheduler();
+    cout << "KEY SCHEDULER ARRAY" << endl;
+    for (int i = 0; i < 43; i++) {
+        cout << "{ ";
+        for (int j = 0; j < 43; j++) {
+            cout << keySchedule[i][j] << ", ";
+        }
+        cout << "}" << endl;
     }
 
-    //Round 10
-    state = SubByte(state);
-    state = ShiftRows(state);
-    state = AddRoundKey(state);
-    cout << "ROUND 10 COMPLETE" << endl;
+//    //Before Rounds perform AddRoundKey
+//    state = AddRoundKey(state);
+//    cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
+//
+//    //Rounds 0-9
+//    for (int round = 0; round <= 9; round++) {
+//        state = SubByte(state);
+//        state = ShiftRows(state);
+//        state = MixedColumns(state);
+//        state = AddRoundKey(state);
+//        cout << "ROUND " << round << " COMPLETE" << endl;
+//    }
+//
+//    //Round 10
+//    state = SubByte(state);
+//    state = ShiftRows(state);
+//    state = AddRoundKey(state);
+//    cout << "ROUND 10 COMPLETE" << endl;
+//
+//    //Cipher Text
+//    string returnString = "";
+//
+//    for (int i = 0; i < 4; i++) {
+//        for (int j = 0; j < 4; j++) {
+//            returnString += state[i][j] + " ";
+//        }
+//    }
+//    encryptedString = returnString;
 
-    //Cipher Text
-    PrintArrayDebug(state);
-    string returnString = "";
+    //Deallocate arrays
+    for (int i = 0; i < rows; ++i) {
+        delete [] state[i];
+    }
+    delete [] state;
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 43; ++i) {
+        delete [] keySchedule[i];
+    }
+    delete [] keySchedule;
+}
+
+//Performs key scheduling for sub-round key creation via utilizing the programs AES key
+string** KeyScheduler() {
+    //Key Expansion Allocation
+    string** keySchedule = new string*[43];
+    for (int i = 0; i < 43; ++i) {
+        keySchedule[i] = new string[4];
+    }
+
+    //Copy over AES key for columns W0-W3
+    for (int i = 0 ; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            returnString += state[i][j] + " ";
+            keySchedule[i][j] = AES_KEY[i][j];
         }
     }
-    encryptedString = returnString;
 
-    //TODO: Later we should make the key matrix, but this is simple for now
+    //Perform key expansion steps to generate new keys in columns W4-W43;
+    int currentCol = 4;
+    cout << "ENTERING LOOP" << endl;
+    if ((currentCol <= 43)) {
+        cout << "yest" << endl;
+    } else {
+        cout << "no" << endl;
+    }
+    while (currentCol <= 43) {
+        cout << "currentCol = " << currentCol << endl;
+        //Copy over columns and shift the bits left one index
+        string columnOne[4] = {keySchedule[1][(currentCol-4)], keySchedule[2][(currentCol-4)], keySchedule[3][(currentCol-4)], keySchedule[0][(currentCol-4)]};
+        string columnTwo[4] = {keySchedule[1][(currentCol-1)], keySchedule[2][(currentCol-1)], keySchedule[3][(currentCol-1)], keySchedule[0][(currentCol-1)]};
+        cout << "{" << keySchedule[1][(currentCol-4)] << " " << keySchedule[2][(currentCol-4)] << " " << keySchedule[3][(currentCol-4)] << " " << keySchedule[0][(currentCol-4)]  << "}" << endl;
+        cout << "{" << keySchedule[1][(currentCol-1)] << " " << keySchedule[2][(currentCol-1)] << " " << keySchedule[3][(currentCol-1)] << " " << keySchedule[0][(currentCol-1)]  << "}" << endl;
+
+        cout << columnOne[4] << (columnOne[4].substr(0,1)) <<endl;
+        cout << columnTwo[4] << (columnTwo[4].substr(0,1)) << endl;
+
+        //Perform SubByte with each bit
+        for (int i = 0; i < 4; i++) {
+            int columnOneX = stoi(columnOne[i].substr(0,1), nullptr, 16);
+            int columnOneY = stoi(columnOne[i].substr(1,1), nullptr, 16);
+            int columnTwoX = stoi(columnTwo[i].substr(0,1), nullptr, 16);
+            int columnTwoY = stoi(columnTwo[i].substr(1,1), nullptr, 16);
+            columnOne[i] = SBOX[columnOneX][columnOneY];
+            columnTwo[i] = SBOX[columnTwoX][columnTwoY];
+        }
+
+        //XOR columnOne and columnTwo then save result
+        for (int i = 0; i < 4; i++) {
+            string colOneBinary = BinaryToHex(columnOne[i]);
+            string colTwoBinary = BinaryToHex(columnTwo[i]);
+            string xorResult = "";
+//            for (int j = 0; j < 8; j++) {
+//                if ((colOneBinary[j] == '1') && (colTwoBinary[j] == '1')) {
+//                    xorResult += '0';
+//                } else if ((colOneBinary[j] == '0') && (colTwoBinary[j] == '0')) {
+//                    xorResult += '0';
+//                } else {
+//                    xorResult += '1';
+//                }
+//            }
+
+            //Save new value to the new column
+            xorResult = "01100111";
+            keySchedule[currentCol][i] = BinaryToHex(xorResult);
+        }
+        cout << "COL: " + currentCol << endl;
+        currentCol++;
+    }
+    cout << "DONE!" << endl;
+
+    return keySchedule;
 }
 
 string** MixedColumns(string** state) {
