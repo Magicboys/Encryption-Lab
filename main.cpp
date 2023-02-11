@@ -26,13 +26,13 @@ void EncryptString(string originalString, string& encryptedString);
 void decryptString(string encryptedString, string& decryptedString);
 
 //Encryption Step Methods
-string** AddRoundKey(string** state);
+string** AddRoundKey(string** state, string** roundKey);
 string** SubByte(string** state);
 string** ShiftRows(string** state);
 string** MixedColumns(string** state);
 
 //Helper methods
-string** KeyScheduler();
+string** KeyScheduler(string** keySchedule);
 void HexToBinary(int original, int& binaryValue);
 string BinaryToHex(const string& binaryString);
 void PrintArrayDebug(string** state);
@@ -124,66 +124,100 @@ void EncryptString(string originalString, string& encryptedString) {
         }
     }
 
-    //Perform Key Scheduling
-    string** keySchedule =  KeyScheduler();
-    cout << "KEY SCHEDULER ARRAY" << endl;
-    for (int i = 0; i < 43; i++) {
-        cout << "{ ";
-        for (int j = 0; j < 43; j++) {
-            cout << keySchedule[i][j] << ", ";
-        }
-        cout << "}" << endl;
+    //Allocate Key Data Structures
+    string** keySchedule = new string*[4];
+    for (int i = 0; i < 4; ++i) {
+        keySchedule[i] = new string[44];
+    }
+    string** roundKey = new string*[4];
+    for (int i = 0; i < 4; ++i) {
+        roundKey[i] = new string[4];
     }
 
-//    //Before Rounds perform AddRoundKey
-//    state = AddRoundKey(state);
-//    cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
-//
-//    //Rounds 0-9
-//    for (int round = 0; round <= 9; round++) {
-//        state = SubByte(state);
-//        state = ShiftRows(state);
-//        state = MixedColumns(state);
-//        state = AddRoundKey(state);
-//        cout << "ROUND " << round << " COMPLETE" << endl;
-//    }
-//
-//    //Round 10
-//    state = SubByte(state);
-//    state = ShiftRows(state);
-//    state = AddRoundKey(state);
-//    cout << "ROUND 10 COMPLETE" << endl;
-//
-//    //Cipher Text
-//    string returnString = "";
-//
-//    for (int i = 0; i < 4; i++) {
-//        for (int j = 0; j < 4; j++) {
-//            returnString += state[i][j] + " ";
-//        }
-//    }
-//    encryptedString = returnString;
+    //Generate Key Schedule
+    keySchedule = KeyScheduler(keySchedule);
+    cout << "===DEBUG=====" << endl;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 44; j++) {
+            cout << keySchedule[i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout << "===========" << endl;
+
+    //Before Rounds perform AddRoundKey
+    for (int i = 0; i < 4; i++) {
+        for (int j  = 0; j < 4; j++) {
+            roundKey[i][j] = keySchedule[i][j];
+            cout << roundKey[i][j] << " ";
+        }
+        cout << endl;
+    }
+    state = AddRoundKey(state, roundKey);
+    cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
+
+    //Rounds 0-9
+    for (int round = 0; round <= 9; round++) {
+        //Fetch round key
+        int currCol = (round+1) * 4;
+        cout << "=========" << endl;
+        for (int i = 0; i < 4; i++) {
+//            cout << "currCol: " << currCol << endl;
+            for (int j = 0; j < 4; j++) {
+//                cout << "currCol: " << currCol << endl;
+                roundKey[j][i] = keySchedule[j][currCol];
+                cout << roundKey[i][j] << " ";
+
+            }
+            currCol++;
+            cout << endl;
+//            cout << currCol << endl;
+
+        }
+
+        //Steps
+        state = SubByte(state);
+        state = ShiftRows(state);
+        state = MixedColumns(state);
+        state = AddRoundKey(state, roundKey);
+        cout << "ROUND " << round << " COMPLETE" << endl;
+    }
+
+    //Round 10
+    state = SubByte(state);
+    state = ShiftRows(state);
+    //state = AddRoundKey(state, roundKey);
+    cout << "ROUND 10 COMPLETE" << endl;
+
+    //Cipher Text
+    string returnString = "";
+
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            returnString += state[i][j] + " ";
+        }
+    }
+    encryptedString = returnString;
 
     //Deallocate arrays
-    for (int i = 0; i < rows; ++i) {
+    for (int i = 0; i < rows; i++) {
         delete [] state[i];
     }
     delete [] state;
 
-    for (int i = 0; i < 43; ++i) {
+    for (int i = 0; i < 4; i++) {
         delete [] keySchedule[i];
     }
     delete [] keySchedule;
+
+    for (int i = 0; i < 4; i++) {
+        delete [] roundKey[i];
+    }
+    delete [] roundKey;
 }
 
 //Performs key scheduling for sub-round key creation via utilizing the programs AES key
-string** KeyScheduler() {
-    //Key Expansion Allocation
-    string** keySchedule = new string*[4];
-    for (int i = 0; i < 4; ++i) {
-        keySchedule[i] = new string[43];
-    }
-
+string** KeyScheduler(string** keySchedule) {
     //Copy over AES key for columns W0-W3
     for (int i = 0 ; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -191,9 +225,9 @@ string** KeyScheduler() {
         }
     }
 
-    //Perform key expansion steps to generate new keys in columns W4-W43;
+    //Perform key expansion steps to generate new keys in columns W4-W44;
     int currentCol = 4;
-    while (currentCol <= 43) {
+    while (currentCol < 44) {
         //Copy over columns and shift the bits left one index
         string columnOne[4] = {keySchedule[1][(currentCol-4)], keySchedule[2][(currentCol-4)], keySchedule[3][(currentCol-4)], keySchedule[0][(currentCol-4)]};
         string columnTwo[4] = {keySchedule[1][(currentCol-1)], keySchedule[2][(currentCol-1)], keySchedule[3][(currentCol-1)], keySchedule[0][(currentCol-1)]};
@@ -235,14 +269,6 @@ string** KeyScheduler() {
             //Save new value to the new column
             keySchedule[i][currentCol] =  BinaryToHex(xorResult);
         }
-
-//        cout << "DEBUG!" << endl;
-//        for (int i = 0; i < 4; i++) {
-//            for (int j = 0; j < currentCol; j++) {
-//                cout << keySchedule[i][j] << " ";
-//            }
-//            cout << endl;
-//        }
         currentCol++;
     }
 
@@ -358,12 +384,13 @@ string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo
 }
 
 //Encryption AddRoundKey Step
-string** AddRoundKey(string** state) {
+string** AddRoundKey(string** state, string** roundKey) {
     //TODO: Later we should make the key matrix, but this is simple for now
     string key[4] = {"c", "62", "61", "50"};
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            int a = stoi(key[j], nullptr, 16);
+            //cout << "ROUND KEY VAL: " << roundKey[i][j] << endl;
+            int a = stoi(roundKey[i][j], nullptr, 16);
             int b = stoi(state[i][j], nullptr, 16);
             ostringstream oss;
             string hex_representation;
