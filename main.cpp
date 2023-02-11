@@ -157,36 +157,44 @@ void EncryptString(string originalString, string& encryptedString) {
     cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
 
     //Rounds 0-9
-    for (int round = 0; round <= 9; round++) {
+    for (int round = 0; round < 9; round++) {
         //Fetch round key
         int currCol = (round+1) * 4;
-        cout << "=========" << endl;
         for (int i = 0; i < 4; i++) {
-//            cout << "currCol: " << currCol << endl;
             for (int j = 0; j < 4; j++) {
-//                cout << "currCol: " << currCol << endl;
-                roundKey[j][i] = keySchedule[j][currCol];
-                cout << roundKey[i][j] << " ";
-
+                roundKey[i][j] = keySchedule[j][currCol+i];
             }
-            currCol++;
-            cout << endl;
-//            cout << currCol << endl;
-
         }
+
+//        cout << "ROUND: " << (round+1) << " DEBUG" << endl;
+//        for (int i = 0; i < 4; i++) {
+//            for (int j = 0; j < 4; j++) {
+//                cout << roundKey[i][j] << " ";
+//            }
+//            cout << endl;
+//        }
 
         //Steps
         state = SubByte(state);
         state = ShiftRows(state);
-        state = MixedColumns(state);
-        state = AddRoundKey(state, roundKey);
-        cout << "ROUND " << round << " COMPLETE" << endl;
+        //state = MixedColumns(state);
+//        state = AddRoundKey(state, roundKey);
+        cout << "ROUND " << (round+1) << " COMPLETE" << endl;
+        PrintArrayDebug(state);
     }
 
     //Round 10
+    //Fetch Round 10 Key
+    int currCol = (9) * 4;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            roundKey[i][j] = keySchedule[j][currCol+i];
+        }
+    }
+    //Round 10 Steps
     state = SubByte(state);
     state = ShiftRows(state);
-    //state = AddRoundKey(state, roundKey);
+    state = AddRoundKey(state, roundKey);
     cout << "ROUND 10 COMPLETE" << endl;
 
     //Cipher Text
@@ -385,12 +393,9 @@ string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo
 
 //Encryption AddRoundKey Step
 string** AddRoundKey(string** state, string** roundKey) {
-    //TODO: Later we should make the key matrix, but this is simple for now
-    string key[4] = {"c", "62", "61", "50"};
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            //cout << "ROUND KEY VAL: " << roundKey[i][j] << endl;
-            int a = stoi(roundKey[i][j], nullptr, 16);
+            int a = stoi(roundKey[j][i], nullptr, 16);
             int b = stoi(state[i][j], nullptr, 16);
             ostringstream oss;
             string hex_representation;
