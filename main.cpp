@@ -35,6 +35,7 @@ string** MixedColumns(string** state);
 string** KeyScheduler(string** keySchedule);
 void HexToBinary(int original, int& binaryValue);
 string BinaryToHex(const string& binaryString);
+string IrreduciblePolynomialTheorem(string original);
 void PrintArrayDebug(string** state);
 string GalosisFieldBinaryMultiplication(unsigned int a, unsigned int b);
 
@@ -67,6 +68,10 @@ const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "3
 int main(int argc, char* argv[]) {
     bool continueProgram = true;
 
+    //TODO: Remove test case
+    IrreduciblePolynomialTheorem("111100000000");
+
+    /*
     while (continueProgram) {
         cout << "===================================" << endl;
         cout << "What option would you like?" << endl;
@@ -101,6 +106,7 @@ int main(int argc, char* argv[]) {
             cout << "Invalid Option, Try Again!" << endl;
         }
     }
+     */
 }
 
 
@@ -357,7 +363,7 @@ string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo
     //If the binary number is overflowed then apply the irreducible polynomial theorem GF(2^3)
     if (stoi(newProduct) > 11111111) {
         newProduct = newProduct.substr(1,8);
-        string polyTheorem = "00011011";
+        string polyTheorem = "00011011"; //x^4+x^3+x+1
         string result = "";
         for (int i = 0; i < 8; i++) {
             if ((polyTheorem[i] == '1') && (newProduct[i] == '1')) {
@@ -389,6 +395,83 @@ string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo
         }
         return newProduct;
     }
+}
+
+//Takes a binary string larger then 256 and reduces it via irreducibile polynomial formula GF(2^3)
+string IrreduciblePolynomialTheorem(string original) {
+    //Save the first 8 bits & get overflowed section
+//    cout << "length: " << original.length() << endl;
+    string overflowed = original.substr(0,original.length()-8);
+    original = original.substr(original.length()-8,8);
+
+    cout << "Original: " << original << endl;
+    cout << "Overflowed: " << overflowed << endl;
+//    cout << "Overflowed length: " << overflowed.length() << endl;
+
+    int degree = 1;
+    //string polyTheoremConstant = "00011011"; //x^4+x^3+x+1
+    string polyTheoremConstant = "00011011";
+    string degreeBinary = "";
+    string resultsToAddToOriginal[8] = {"","", "", "", "", "", "", ""};
+    for (int i = overflowed.length()-1; i >= 0; i--) {
+//        cout << "DEGREE: " << degree << endl;
+        if (overflowed[i] == '1') {
+            degreeBinary = '1';
+            for (int k = 0; k < degree-1; k++) {
+                degreeBinary += '0';
+            }
+//            cout << "OVERFLOW X: " << degreeBinary << endl;
+//            cout << "CONSTANT: " << polyTheoremConstant << endl;
+            string polyTheoremProduct = std::to_string((stoi(polyTheoremConstant)*stoi(degreeBinary)));
+//            cout << "POLY THEROEM PRODUCT:" << polyTheoremProduct << endl;
+
+
+            if (polyTheoremProduct.length() <= 8) {
+                string polyTheroemProduct =  std::to_string((stoi(polyTheoremProduct)+stoi(original)));
+                string prunedPolyProduct = "";
+                for (int k = 0; k < (8 - polyTheoremProduct.length()); k++) {
+                    prunedPolyProduct += '0';
+                }
+                prunedPolyProduct += polyTheoremProduct;
+//                cout << "2's Length: " << prunedPolyProduct.length() << endl;
+                for (int k = 0; k < polyTheoremProduct.length(); k++) {
+                    if (polyTheoremProduct[k] == '2') {
+                        polyTheoremProduct.replace(k, 1, "0");
+                    }
+                }
+
+                resultsToAddToOriginal[degree-1] = prunedPolyProduct;
+//                cout << "newORIGINAL: " << original << endl;
+            } else {
+                cout << "Poly Theorem Product too long! Needs to be reduced" << endl;
+            }
+        }
+        degree++;
+    }
+
+    //Add all the binary string's together
+    string binaryXORResult = "";
+    for (int z = 0; z < 8; z++) {
+        int oneCounter = 0;
+        if (resultsToAddToOriginal[z] != "") {
+            cout << "ADDING: " << resultsToAddToOriginal[z] << endl;
+            for (int q = 0; q < 8; q++) {
+                if ((resultsToAddToOriginal[z][q] == '1')) {
+                    oneCounter++;
+                }
+            }
+        }
+
+        if ((oneCounter % 2) == 0) {
+            binaryXORResult += '0';
+        } else {
+            binaryXORResult += '1';
+        }
+    }
+
+    cout << binaryXORResult << endl;
+
+    return "";
 }
 
 //Encryption AddRoundKey Step
