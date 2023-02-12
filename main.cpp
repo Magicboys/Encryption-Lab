@@ -105,7 +105,11 @@ int main(int argc, char* argv[]) {
     }
 }
 
+/*
+ * ENCRYPTION METHODS
+ * */
 
+//Takes in the original 16 character string and returns an encrypted 16 character string
 void EncryptString(string originalString, string& encryptedString) {
     //First make original state matrix
     int rows = 4;
@@ -406,24 +410,6 @@ string IrreduciblePolynomialTheorem(string original) {
     return binaryXORResult;
 }
 
-//Prune binary numbers that may have values that may have other numbers than 1's or 0's from a primitive operation
-//Also verifies that the binary string has 8 characters
-string PruneBinaryNumber(string original) {
-    string prunedPolyProduct = "";
-    for (int k = 0; k < (8 - original.length()); k++) {
-        prunedPolyProduct += '0';
-    }
-    prunedPolyProduct += original;
-
-    //Make sure there are no 2s
-    for (int k = 0; k < prunedPolyProduct.length(); k++) {
-        if (prunedPolyProduct[k] == '2') {
-            prunedPolyProduct.replace(k, 1, "0");
-        }
-    }
-    return prunedPolyProduct;
-}
-
 //Encryption AddRoundKey Step
 string** AddRoundKey(string** state, string** roundKey) {
     for (int i = 0; i < 4; i++) {
@@ -485,6 +471,12 @@ string** ShiftRows(string** state) {
     return state;
 }
 
+
+/*
+ * UTILITY METHODS BELOW
+ * */
+
+//Prints the state array to console
 void PrintArrayDebug(string** state) {
     cout << "=========================" << endl;
     for (int i = 0; i < 4; i++) {
@@ -511,6 +503,7 @@ void HexToBinary(int original, int& binaryValue) {
     }
 }
 
+//Binary string to hex conversion
 string BinaryToHex(const string& binaryString) {
     string hex;
     for (size_t i = 0; i < binaryString.length(); i += 4) {
@@ -518,6 +511,24 @@ string BinaryToHex(const string& binaryString) {
         hex += nibble.to_ulong() < 10 ? char(nibble.to_ulong() + '0') : char(nibble.to_ulong()-10 + 'A');
     }
     return hex;
+}
+
+//Prune binary numbers that may have values that may have other numbers than 1's or 0's from a primitive operation
+//Also verifies that the binary string has 8 characters
+string PruneBinaryNumber(string original) {
+    string prunedPolyProduct = "";
+    for (int k = 0; k < (8 - original.length()); k++) {
+        prunedPolyProduct += '0';
+    }
+    prunedPolyProduct += original;
+
+    //Make sure there are no 2s
+    for (int k = 0; k < prunedPolyProduct.length(); k++) {
+        if (prunedPolyProduct[k] == '2') {
+            prunedPolyProduct.replace(k, 1, "0");
+        }
+    }
+    return prunedPolyProduct;
 }
 
 //Purpose: takes in the name of a file and reads its contents (if the file exists)
