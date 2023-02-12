@@ -406,13 +406,13 @@ string IrreduciblePolynomialTheorem(string original) {
 
     cout << "Original: " << original << endl;
     cout << "Overflowed: " << overflowed << endl;
-//    cout << "Overflowed length: " << overflowed.length() << endl;
+    cout << "Overflowed length: " << overflowed.length() << endl;
 
     int degree = 1;
     //string polyTheoremConstant = "00011011"; //x^4+x^3+x+1
     string polyTheoremConstant = "00011011";
     string degreeBinary = "";
-    string resultsToAddToOriginal[8] = {"","", "", "", "", "", "", ""};
+    string resultsToAddToOriginal[9] = {"","", "", "", "", "", "", "", original};
     for (int i = overflowed.length()-1; i >= 0; i--) {
 //        cout << "DEGREE: " << degree << endl;
         if (overflowed[i] == '1') {
@@ -427,7 +427,7 @@ string IrreduciblePolynomialTheorem(string original) {
 
 
             if (polyTheoremProduct.length() <= 8) {
-                string polyTheroemProduct =  std::to_string((stoi(polyTheoremProduct)+stoi(original)));
+                //string polyTheroemProduct =  std::to_string((stoi(polyTheoremProduct)+stoi(original)));
                 string prunedPolyProduct = "";
                 for (int k = 0; k < (8 - polyTheoremProduct.length()); k++) {
                     prunedPolyProduct += '0';
@@ -452,16 +452,15 @@ string IrreduciblePolynomialTheorem(string original) {
     //Add all the binary string's together
     string binaryXORResult = "";
     cout << "ADDING:" << endl;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 9; i++) {
         if (resultsToAddToOriginal[i] != "") {
             cout << resultsToAddToOriginal[i] << endl;
         }
     }
     for (int z = 0; z < 8; z++) {
         int oneCounter = 0;
-        for (int q = 0; q < 8; q++) {
+        for (int q = 0; q < 9; q++) {
             if (resultsToAddToOriginal[q] != ""){
-                cout << resultsToAddToOriginal[q][z];
                 if ((resultsToAddToOriginal[q][z] == '1')) {
                     oneCounter++;
                 }
