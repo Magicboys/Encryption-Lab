@@ -26,18 +26,27 @@ void EncryptString(string originalString, string& encryptedString);
 void decryptString(string encryptedString, string& decryptedString);
 
 //Encryption Step Methods
-string** AddRoundKey(string** state);
+string** AddRoundKey(string** state, string** roundKey);
 string** SubByte(string** state);
 string** ShiftRows(string** state);
 string** MixedColumns(string** state);
 
 //Helper methods
+string** KeyScheduler(string** keySchedule);
 void HexToBinary(int original, int& binaryValue);
+string PruneBinaryNumber(string original);
 string BinaryToHex(const string& binaryString);
+string IrreduciblePolynomialTheorem(string original);
 void PrintArrayDebug(string** state);
 string GalosisFieldBinaryMultiplication(unsigned int a, unsigned int b);
 
 //Global Constants
+//AES Key
+const string AES_KEY [4][4] = {{"73", "73", "69", "72"},
+                               {"61", "68", "73", "69"},
+                               {"74", "63", "62", "6e"},
+                               {"69", "62", "6f", "67"}};
+
 //S-BOX
 const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "30", "01", "67", "2b", "fe", "d7", "ab", "76"},
                         {"ca", "82", "c9", "7d","fa", "59", "47", "f0", "ad", "d4", "a2", "af", "9c", "a4", "72", "c0"},
@@ -96,9 +105,12 @@ int main(int argc, char* argv[]) {
     }
 }
 
+/*
+ * ENCRYPTION METHODS
+ * */
 
+//Takes in the original 16 character string and returns an encrypted 16 character string
 void EncryptString(string originalString, string& encryptedString) {
-    //TODO: make the matrix based off the original string & deallocate array memory
     //First make original state matrix
     int rows = 4;
     string** state = new string*[rows];
@@ -118,27 +130,63 @@ void EncryptString(string originalString, string& encryptedString) {
         }
     }
 
-    //Before Rounds
-    state = AddRoundKey(state);
+    //Allocate Key Data Structures
+    string** keySchedule = new string*[4];
+    for (int i = 0; i < 4; ++i) {
+        keySchedule[i] = new string[44];
+    }
+    string** roundKey = new string*[4];
+    for (int i = 0; i < 4; ++i) {
+        roundKey[i] = new string[4];
+    }
+
+    //Generate Key Schedule
+    keySchedule = KeyScheduler(keySchedule);
+
+    //Before Rounds perform AddRoundKey
+    for (int i = 0; i < 4; i++) {
+        for (int j  = 0; j < 4; j++) {
+            roundKey[i][j] = keySchedule[i][j];
+        }
+    }
+    state = AddRoundKey(state, roundKey);
     cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
 
     //Rounds 0-9
-    for (int round = 0; round <= 9; round++) {
+    for (int round = 0; round < 9; round++) {
+        //Fetch round key
+        int currCol = (round+1) * 4;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                roundKey[i][j] = keySchedule[j][currCol+i];
+            }
+        }
+
+
+        //Steps
         state = SubByte(state);
         state = ShiftRows(state);
         state = MixedColumns(state);
-        state = AddRoundKey(state);
-        cout << "ROUND " << round << " COMPLETE" << endl;
+        state = AddRoundKey(state, roundKey);
+        cout << "ROUND " << (round+1) << " COMPLETE" << endl;
+        PrintArrayDebug(state);
     }
 
     //Round 10
+    //Fetch Round 10 Key
+    int currCol = (9) * 4;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            roundKey[i][j] = keySchedule[j][currCol+i];
+        }
+    }
+    //Round 10 Steps
     state = SubByte(state);
     state = ShiftRows(state);
-    state = AddRoundKey(state);
+    state = AddRoundKey(state, roundKey);
     cout << "ROUND 10 COMPLETE" << endl;
 
     //Cipher Text
-    PrintArrayDebug(state);
     string returnString = "";
 
     for (int i = 0; i < 4; i++) {
@@ -148,7 +196,80 @@ void EncryptString(string originalString, string& encryptedString) {
     }
     encryptedString = returnString;
 
-    //TODO: Later we should make the key matrix, but this is simple for now
+    //Deallocate arrays
+    for (int i = 0; i < rows; i++) {
+        delete [] state[i];
+    }
+    delete [] state;
+
+    for (int i = 0; i < 4; i++) {
+        delete [] keySchedule[i];
+    }
+    delete [] keySchedule;
+
+    for (int i = 0; i < 4; i++) {
+        delete [] roundKey[i];
+    }
+    delete [] roundKey;
+}
+
+//Performs key scheduling for sub-round key creation via utilizing the programs AES key
+string** KeyScheduler(string** keySchedule) {
+    //Copy over AES key for columns W0-W3
+    for (int i = 0 ; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            keySchedule[i][j] = AES_KEY[i][j];
+        }
+    }
+
+    //Perform key expansion steps to generate new keys in columns W4-W44;
+    int currentCol = 4;
+    while (currentCol < 44) {
+        //Copy over columns and shift the bits left one index
+        string columnOne[4] = {keySchedule[1][(currentCol-4)], keySchedule[2][(currentCol-4)], keySchedule[3][(currentCol-4)], keySchedule[0][(currentCol-4)]};
+        string columnTwo[4] = {keySchedule[1][(currentCol-1)], keySchedule[2][(currentCol-1)], keySchedule[3][(currentCol-1)], keySchedule[0][(currentCol-1)]};
+
+        //Perform SubByte with each bit
+        for (int i = 0; i < 4; i++) {
+            int columnOneX = stoi(columnOne[i].substr(0,1), nullptr, 16);
+            int columnOneY = stoi(columnOne[i].substr(1,1), nullptr, 16);
+            int columnTwoX = stoi(columnTwo[i].substr(0,1), nullptr, 16);
+            int columnTwoY = stoi(columnTwo[i].substr(1,1), nullptr, 16);
+            columnOne[i] = SBOX[columnOneX][columnOneY];
+            columnTwo[i] = SBOX[columnTwoX][columnTwoY];
+        }
+
+        //XOR columnOne and columnTwo then save result
+        for (int i = 0; i < 4; i++) {
+            int columnOneOriginalHex = stoi(columnOne[i], nullptr, 16);
+            int columnTwoOriginalHex = stoi(columnTwo[i], nullptr, 16);
+            int colOneBinary = 0;
+            int colTwoBinary = 0;
+
+            HexToBinary(columnOneOriginalHex, colOneBinary);
+            HexToBinary(columnTwoOriginalHex, colTwoBinary);
+
+            string colOneBinaryString = std::to_string(colOneBinary);
+            string colTwoBinaryString = std::to_string(colTwoBinary);
+
+            string xorResult = "";
+            for (int j = 0; j < 8; j++) {
+                if ((colOneBinaryString[j] == '1') && (colTwoBinaryString[j] == '1')) {
+                    xorResult += '0';
+                } else if ((colOneBinaryString[j] == '0') && (colTwoBinaryString[j] == '0')) {
+                    xorResult += '0';
+                } else {
+                    xorResult += '1';
+                }
+            }
+
+            //Save new value to the new column
+            keySchedule[i][currentCol] =  BinaryToHex(xorResult);
+        }
+        currentCol++;
+    }
+
+    return keySchedule;
 }
 
 string** MixedColumns(string** state) {
@@ -224,28 +345,7 @@ string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo
 
     //If the binary number is overflowed then apply the irreducible polynomial theorem GF(2^3)
     if (stoi(newProduct) > 11111111) {
-        newProduct = newProduct.substr(1,8);
-        string polyTheorem = "00011011";
-        string result = "";
-        for (int i = 0; i < 8; i++) {
-            if ((polyTheorem[i] == '1') && (newProduct[i] == '1')) {
-                result += "0";
-            } else if (((polyTheorem[i] == '0') && (newProduct[i] == '1')) || ((polyTheorem[i] == '1') && (newProduct[i] == '0'))) {
-                result += "1";
-            } else {
-                result += "0";
-            }
-        }
-
-        if (result.length() != 8) {
-            string temp = "";
-            for(int i = 0; i <= (8-result.length()); i++) {
-                temp += "0";
-            }
-            temp += result;
-            result = temp;
-        }
-        return result;
+        return IrreduciblePolynomialTheorem(newProduct);
     } else {
         if (newProduct.length() < 8) {
             string temp = "";
@@ -259,19 +359,75 @@ string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo
     }
 }
 
+//Takes a binary string larger then 256 and reduces it via irreducibile polynomial formula GF(2^3)
+string IrreduciblePolynomialTheorem(string original) {
+    //Save the first 8 bits & get overflowed section
+    string overflowed = original.substr(0,original.length()-8);
+    original = original.substr(original.length()-8,8);
+
+    int degree = 1;
+    //string polyTheoremConstant = "00011011"; //x^4+x^3+x+1
+    string polyTheoremConstant = "00011011";
+    string degreeBinary = "";
+    string resultsToAddToOriginal[9] = {"","", "", "", "", "", "", "", original};
+    for (int i = overflowed.length()-1; i >= 0; i--) {
+        if (overflowed[i] == '1') {
+            degreeBinary = '1';
+            for (int k = 0; k < degree-1; k++) {
+                degreeBinary += '0';
+            }
+            string polyTheoremProduct = std::to_string((stoi(polyTheoremConstant)*stoi(degreeBinary)));
+
+            if (polyTheoremProduct.length() <= 8) {
+                resultsToAddToOriginal[degree-1] = PruneBinaryNumber(polyTheoremProduct);
+            } else {
+                cout << "Poly Theorem Product too long! Still needs to be reduced." << endl;
+            }
+        }
+        degree++;
+    }
+
+    //Add all the binary string's together
+    string binaryXORResult = "";
+    for (int z = 0; z < 8; z++) {
+        int oneCounter = 0;
+        for (int q = 0; q < 9; q++) {
+            if (resultsToAddToOriginal[q] != ""){
+                if ((resultsToAddToOriginal[q][z] == '1')) {
+                    oneCounter++;
+                }
+            }
+
+        }
+
+        if ((oneCounter % 2) == 0) {
+            binaryXORResult += '0';
+        } else {
+            binaryXORResult += '1';
+        }
+    }
+
+    return binaryXORResult;
+}
+
 //Encryption AddRoundKey Step
-string** AddRoundKey(string** state) {
-    //TODO: Later we should make the key matrix, but this is simple for now
-    string key[4] = {"c", "62", "61", "50"};
+string** AddRoundKey(string** state, string** roundKey) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            int a = stoi(key[j], nullptr, 16);
-            int b = stoi(state[i][j], nullptr, 16);
-            ostringstream oss;
-            string hex_representation;
-            oss << std::hex << int((a+b));
-            string hex_sum = oss.str();
-            state[i][j] = hex_sum;
+            int aHex = stoi(roundKey[j][i], nullptr, 16);
+            int bHex = stoi(state[i][j], nullptr, 16);
+            int aBinary = 0;
+            int bBinary = 0;
+
+            HexToBinary(aHex, aBinary);
+            HexToBinary(bHex, bBinary);
+
+            string sum = PruneBinaryNumber(std::to_string((aBinary+bBinary)));
+            if (stoi(sum) > 11111111) {
+                sum = stoi(IrreduciblePolynomialTheorem(sum));
+            }
+            string hex_representation = BinaryToHex(sum);
+            state[i][j] = hex_representation;
         }
     }
     return state;
@@ -315,6 +471,12 @@ string** ShiftRows(string** state) {
     return state;
 }
 
+
+/*
+ * UTILITY METHODS BELOW
+ * */
+
+//Prints the state array to console
 void PrintArrayDebug(string** state) {
     cout << "=========================" << endl;
     for (int i = 0; i < 4; i++) {
@@ -341,6 +503,7 @@ void HexToBinary(int original, int& binaryValue) {
     }
 }
 
+//Binary string to hex conversion
 string BinaryToHex(const string& binaryString) {
     string hex;
     for (size_t i = 0; i < binaryString.length(); i += 4) {
@@ -348,6 +511,24 @@ string BinaryToHex(const string& binaryString) {
         hex += nibble.to_ulong() < 10 ? char(nibble.to_ulong() + '0') : char(nibble.to_ulong()-10 + 'A');
     }
     return hex;
+}
+
+//Prune binary numbers that may have values that may have other numbers than 1's or 0's from a primitive operation
+//Also verifies that the binary string has 8 characters
+string PruneBinaryNumber(string original) {
+    string prunedPolyProduct = "";
+    for (int k = 0; k < (8 - original.length()); k++) {
+        prunedPolyProduct += '0';
+    }
+    prunedPolyProduct += original;
+
+    //Make sure there are no 2s
+    for (int k = 0; k < prunedPolyProduct.length(); k++) {
+        if (prunedPolyProduct[k] == '2') {
+            prunedPolyProduct.replace(k, 1, "0");
+        }
+    }
+    return prunedPolyProduct;
 }
 
 //Purpose: takes in the name of a file and reads its contents (if the file exists)
