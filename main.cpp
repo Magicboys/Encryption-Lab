@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
     bool continueProgram = true;
 
     //TODO: Remove test case
-    IrreduciblePolynomialTheorem("111100000000");
+    IrreduciblePolynomialTheorem("1010000000");
 
     /*
     while (continueProgram) {
@@ -451,15 +451,22 @@ string IrreduciblePolynomialTheorem(string original) {
 
     //Add all the binary string's together
     string binaryXORResult = "";
+    cout << "ADDING:" << endl;
+    for (int i = 0; i < 8; i++) {
+        if (resultsToAddToOriginal[i] != "") {
+            cout << resultsToAddToOriginal[i] << endl;
+        }
+    }
     for (int z = 0; z < 8; z++) {
         int oneCounter = 0;
-        if (resultsToAddToOriginal[z] != "") {
-            cout << "ADDING: " << resultsToAddToOriginal[z] << endl;
-            for (int q = 0; q < 8; q++) {
-                if ((resultsToAddToOriginal[z][q] == '1')) {
+        for (int q = 0; q < 8; q++) {
+            if (resultsToAddToOriginal[q] != ""){
+                cout << resultsToAddToOriginal[q][z];
+                if ((resultsToAddToOriginal[q][z] == '1')) {
                     oneCounter++;
                 }
             }
+
         }
 
         if ((oneCounter % 2) == 0) {
@@ -469,9 +476,9 @@ string IrreduciblePolynomialTheorem(string original) {
         }
     }
 
-    cout << binaryXORResult << endl;
+    cout << endl << "RESULT: " << binaryXORResult << endl;
 
-    return "";
+    return binaryXORResult;
 }
 
 //Encryption AddRoundKey Step
