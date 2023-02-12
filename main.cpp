@@ -34,6 +34,7 @@ string** MixedColumns(string** state);
 //Helper methods
 string** KeyScheduler(string** keySchedule);
 void HexToBinary(int original, int& binaryValue);
+string PruneBinaryNumber(string original);
 string BinaryToHex(const string& binaryString);
 string IrreduciblePolynomialTheorem(string original);
 void PrintArrayDebug(string** state);
@@ -68,10 +69,6 @@ const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "3
 int main(int argc, char* argv[]) {
     bool continueProgram = true;
 
-    //TODO: Remove test case
-    IrreduciblePolynomialTheorem("1010000000");
-
-    /*
     while (continueProgram) {
         cout << "===================================" << endl;
         cout << "What option would you like?" << endl;
@@ -106,7 +103,6 @@ int main(int argc, char* argv[]) {
             cout << "Invalid Option, Try Again!" << endl;
         }
     }
-     */
 }
 
 
@@ -142,22 +138,12 @@ void EncryptString(string originalString, string& encryptedString) {
 
     //Generate Key Schedule
     keySchedule = KeyScheduler(keySchedule);
-    cout << "===DEBUG=====" << endl;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 44; j++) {
-            cout << keySchedule[i][j] << " ";
-        }
-        cout << endl;
-    }
-    cout << "===========" << endl;
 
     //Before Rounds perform AddRoundKey
     for (int i = 0; i < 4; i++) {
         for (int j  = 0; j < 4; j++) {
             roundKey[i][j] = keySchedule[i][j];
-            cout << roundKey[i][j] << " ";
         }
-        cout << endl;
     }
     state = AddRoundKey(state, roundKey);
     cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
@@ -172,19 +158,12 @@ void EncryptString(string originalString, string& encryptedString) {
             }
         }
 
-//        cout << "ROUND: " << (round+1) << " DEBUG" << endl;
-//        for (int i = 0; i < 4; i++) {
-//            for (int j = 0; j < 4; j++) {
-//                cout << roundKey[i][j] << " ";
-//            }
-//            cout << endl;
-//        }
 
         //Steps
         state = SubByte(state);
         state = ShiftRows(state);
-        //state = MixedColumns(state);
-//        state = AddRoundKey(state, roundKey);
+        state = MixedColumns(state);
+        state = AddRoundKey(state, roundKey);
         cout << "ROUND " << (round+1) << " COMPLETE" << endl;
         PrintArrayDebug(state);
     }
@@ -362,28 +341,7 @@ string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo
 
     //If the binary number is overflowed then apply the irreducible polynomial theorem GF(2^3)
     if (stoi(newProduct) > 11111111) {
-        newProduct = newProduct.substr(1,8);
-        string polyTheorem = "00011011"; //x^4+x^3+x+1
-        string result = "";
-        for (int i = 0; i < 8; i++) {
-            if ((polyTheorem[i] == '1') && (newProduct[i] == '1')) {
-                result += "0";
-            } else if (((polyTheorem[i] == '0') && (newProduct[i] == '1')) || ((polyTheorem[i] == '1') && (newProduct[i] == '0'))) {
-                result += "1";
-            } else {
-                result += "0";
-            }
-        }
-
-        if (result.length() != 8) {
-            string temp = "";
-            for(int i = 0; i <= (8-result.length()); i++) {
-                temp += "0";
-            }
-            temp += result;
-            result = temp;
-        }
-        return result;
+        return IrreduciblePolynomialTheorem(newProduct);
     } else {
         if (newProduct.length() < 8) {
             string temp = "";
@@ -400,13 +358,8 @@ string GalosisFieldBinaryMultiplication(unsigned int numOne, unsigned int numTwo
 //Takes a binary string larger then 256 and reduces it via irreducibile polynomial formula GF(2^3)
 string IrreduciblePolynomialTheorem(string original) {
     //Save the first 8 bits & get overflowed section
-//    cout << "length: " << original.length() << endl;
     string overflowed = original.substr(0,original.length()-8);
     original = original.substr(original.length()-8,8);
-
-    cout << "Original: " << original << endl;
-    cout << "Overflowed: " << overflowed << endl;
-    cout << "Overflowed length: " << overflowed.length() << endl;
 
     int degree = 1;
     //string polyTheoremConstant = "00011011"; //x^4+x^3+x+1
@@ -414,36 +367,17 @@ string IrreduciblePolynomialTheorem(string original) {
     string degreeBinary = "";
     string resultsToAddToOriginal[9] = {"","", "", "", "", "", "", "", original};
     for (int i = overflowed.length()-1; i >= 0; i--) {
-//        cout << "DEGREE: " << degree << endl;
         if (overflowed[i] == '1') {
             degreeBinary = '1';
             for (int k = 0; k < degree-1; k++) {
                 degreeBinary += '0';
             }
-//            cout << "OVERFLOW X: " << degreeBinary << endl;
-//            cout << "CONSTANT: " << polyTheoremConstant << endl;
             string polyTheoremProduct = std::to_string((stoi(polyTheoremConstant)*stoi(degreeBinary)));
-//            cout << "POLY THEROEM PRODUCT:" << polyTheoremProduct << endl;
-
 
             if (polyTheoremProduct.length() <= 8) {
-                //string polyTheroemProduct =  std::to_string((stoi(polyTheoremProduct)+stoi(original)));
-                string prunedPolyProduct = "";
-                for (int k = 0; k < (8 - polyTheoremProduct.length()); k++) {
-                    prunedPolyProduct += '0';
-                }
-                prunedPolyProduct += polyTheoremProduct;
-//                cout << "2's Length: " << prunedPolyProduct.length() << endl;
-                for (int k = 0; k < polyTheoremProduct.length(); k++) {
-                    if (polyTheoremProduct[k] == '2') {
-                        polyTheoremProduct.replace(k, 1, "0");
-                    }
-                }
-
-                resultsToAddToOriginal[degree-1] = prunedPolyProduct;
-//                cout << "newORIGINAL: " << original << endl;
+                resultsToAddToOriginal[degree-1] = PruneBinaryNumber(polyTheoremProduct);
             } else {
-                cout << "Poly Theorem Product too long! Needs to be reduced" << endl;
+                cout << "Poly Theorem Product too long! Still needs to be reduced." << endl;
             }
         }
         degree++;
@@ -451,12 +385,6 @@ string IrreduciblePolynomialTheorem(string original) {
 
     //Add all the binary string's together
     string binaryXORResult = "";
-    cout << "ADDING:" << endl;
-    for (int i = 0; i < 9; i++) {
-        if (resultsToAddToOriginal[i] != "") {
-            cout << resultsToAddToOriginal[i] << endl;
-        }
-    }
     for (int z = 0; z < 8; z++) {
         int oneCounter = 0;
         for (int q = 0; q < 9; q++) {
@@ -475,22 +403,45 @@ string IrreduciblePolynomialTheorem(string original) {
         }
     }
 
-    cout << endl << "RESULT: " << binaryXORResult << endl;
-
     return binaryXORResult;
+}
+
+//Prune binary numbers that may have values that may have other numbers than 1's or 0's from a primitive operation
+//Also verifies that the binary string has 8 characters
+string PruneBinaryNumber(string original) {
+    string prunedPolyProduct = "";
+    for (int k = 0; k < (8 - original.length()); k++) {
+        prunedPolyProduct += '0';
+    }
+    prunedPolyProduct += original;
+
+    //Make sure there are no 2s
+    for (int k = 0; k < prunedPolyProduct.length(); k++) {
+        if (prunedPolyProduct[k] == '2') {
+            prunedPolyProduct.replace(k, 1, "0");
+        }
+    }
+    return prunedPolyProduct;
 }
 
 //Encryption AddRoundKey Step
 string** AddRoundKey(string** state, string** roundKey) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            int a = stoi(roundKey[j][i], nullptr, 16);
-            int b = stoi(state[i][j], nullptr, 16);
-            ostringstream oss;
-            string hex_representation;
-            oss << std::hex << int((a+b));
-            string hex_sum = oss.str();
-            state[i][j] = hex_sum;
+            int aHex = stoi(roundKey[j][i], nullptr, 16);
+            int bHex = stoi(state[i][j], nullptr, 16);
+            int aBinary = 0;
+            int bBinary = 0;
+
+            HexToBinary(aHex, aBinary);
+            HexToBinary(bHex, bBinary);
+
+            string sum = PruneBinaryNumber(std::to_string((aBinary+bBinary)));
+            if (stoi(sum) > 11111111) {
+                sum = stoi(IrreduciblePolynomialTheorem(sum));
+            }
+            string hex_representation = BinaryToHex(sum);
+            state[i][j] = hex_representation;
         }
     }
     return state;
