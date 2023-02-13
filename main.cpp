@@ -166,7 +166,7 @@ void EncryptString(string originalString, string& encryptedString) {
         //Steps
         state = SubByte(state);
         state = ShiftRows(state);
-        state = MixedColumns(state);
+        //state = MixedColumns(state);
         state = AddRoundKey(state, roundKey);
         cout << "ROUND " << (round+1) << " COMPLETE" << endl;
         PrintArrayDebug(state);
@@ -414,19 +414,37 @@ string IrreduciblePolynomialTheorem(string original) {
 string** AddRoundKey(string** state, string** roundKey) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            int aHex = stoi(roundKey[j][i], nullptr, 16);
-            int bHex = stoi(state[i][j], nullptr, 16);
+            //Convert both columns from hex to binary strings
             int aBinary = 0;
             int bBinary = 0;
+            HexToBinary(stoi(roundKey[j][i], nullptr, 16), aBinary);
+            HexToBinary(stoi(state[i][j], nullptr, 16), bBinary);
 
-            HexToBinary(aHex, aBinary);
-            HexToBinary(bHex, bBinary);
+            string aBinaryString = to_string(aBinary);
+            string bBinaryString = to_string(bBinary);
+//            cout << "========" << endl;
+            //cout << aBinary << " " << bBinary << endl;
+            //cout << aBinaryString << " " << bBinaryString << endl;
+            aBinaryString = PruneBinaryNumber(aBinaryString);
+            bBinaryString = PruneBinaryNumber(bBinaryString);
+//            cout << aBinaryString << endl << bBinaryString << endl;
 
-            string sum = PruneBinaryNumber(std::to_string((aBinary+bBinary)));
-            if (stoi(sum) > 11111111) {
-                sum = stoi(IrreduciblePolynomialTheorem(sum));
+
+            //Perform XOR of both binary string
+            string xorResult = "";
+            for (int j = 0; j < 8; j++) {
+                if ((aBinaryString[j] == '1') && (bBinaryString[j] == '1')) {
+                    xorResult += '0';
+                } else if ((aBinaryString[j] == '0') && (bBinaryString[j] == '0')) {
+                    xorResult += '0';
+                } else {
+                    xorResult += '1';
+                }
             }
-            string hex_representation = BinaryToHex(sum);
+//            cout << xorResult << endl;
+//            cout << "========" << endl;
+
+            string hex_representation = BinaryToHex(xorResult);
             state[i][j] = hex_representation;
         }
     }
