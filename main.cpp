@@ -80,20 +80,35 @@ int main(int argc, char* argv[]) {
         cin >> userInput;
 
         if (userInput == "1") {
-//            cout << "===================================" << endl;
-//            cout << "What is the file name?" << endl;
-//            string fileName;
-//            cin >> fileName;
-//
-//            string fileContents;
-//            ReadFile(fileName, fileContents);
-//            cout << fileContents;
+            cout << "===================================" << endl;
+            cout << "What is the file name?" << endl;
+            string fileName;
+            cin >> fileName;
 
-            string fileContents = "hii friendos bla";
-            string encryptedString = "";
-            //TODO: Loop through file and pass file contents to be encrypted in 16 character batches
-            EncryptString(fileContents, encryptedString);
-            cout << encryptedString << endl;
+            string fileContents;
+            ReadFile(fileName, fileContents);
+
+            //Loop through fileContents and encrypt characters in batches of 16
+            string encryptedFile = "";
+            for (int i  = 0; i < fileContents.length(); i += 16) {
+                string localSubstring = fileContents.substr(i, 16);
+                //Search for illegal characters
+                for (int k  = 0; k < 16; k++) {
+                    if (localSubstring[k] == '-') {
+                        localSubstring.replace(k, 1, " ");
+                    }
+//                    if (localSubstring[k] == '-') {
+//                        localSubstring.replace(k, 1, " ");
+//                    }
+                }
+                string localEncryptedResult = "";
+                EncryptString(localSubstring, localEncryptedResult);
+                encryptedFile += localEncryptedResult;
+            }
+
+            //Encrypted file contents
+            cout << "Encrypted File:" << endl;
+            cout << encryptedFile << endl;
         } else if (userInput == "2") {
             //Code for decrypting a file
 
@@ -169,7 +184,7 @@ void EncryptString(string originalString, string& encryptedString) {
         //state = MixedColumns(state);
         state = AddRoundKey(state, roundKey);
         cout << "ROUND " << (round+1) << " COMPLETE" << endl;
-        PrintArrayDebug(state);
+//        PrintArrayDebug(state);
     }
 
     //Round 10
