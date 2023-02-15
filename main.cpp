@@ -27,8 +27,8 @@ void decryptString(string encryptedString, string& decryptedString);
 
 //Encryption Step Methods
 string** AddRoundKey(string** state, string** roundKey);
-string** SubByte(string** state);
-string** ShiftRows(string** state);
+string** SubByte(string** state, string fromList);
+string** ShiftRows(string** state, string direction);
 string** MixedColumns(string** state);
 
 //Helper methods
@@ -66,6 +66,28 @@ const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "3
                         {"8c", "a1", "89", "0d","bf", "e6", "42", "68", "41", "99", "2d", "0f", "b0", "54", "bb", "16"}};
 
 
+
+const string ISBOX [16][16] =
+        {{"52", "09", "6a", "d5","30", "36", "a5", "38", "bf", "40", "a3", "9e", "81", "f3", "d7", "fb"},
+         {"7c", "e3", "39", "82","9b", "2f", "ff", "87", "34", "8e", "43", "44", "c4", "de", "e9", "cb"},
+         {"54", "7b", "94", "32", "a6", "c2", "23", "3d", "ee", "4c", "95", "0b", "42", "fa", "c3", "4e" },
+         {"08", "2e", "a1", "66", "28", "d9", "24", "b2", "76", "5b", "a2", "49", "6d", "8b", "d1", "25"},
+         {"72", "f8", "f6", "64", "86", "68", "98", "16", "d4", "a4", "5c", "cc", "5d", "65", "b6", "92" },
+         {"6c", "70", "48", "50", "fd", "ed", "b9", "da", "5e", "15", "46", "57", "a7", "8d", "9d", "84"},
+         {"90", "d8", "ab", "00", "8c", "bc", "d3", "0a", "f7", "e4", "58", "05", "b8", "b3", "45", "06" },
+         {"d0", "2c", "1e", "8f", "ca", "3f", "0f", "02", "c1", "af", "bd", "03", "01", "13", "8a", "6b" },
+         {"3a", "91", "11", "41", "4f", "67", "dc", "ea", "97", "f2", "cf", "ce", "f0", "b4", "e6", "73"},
+         {"96", "ac", "74", "22", "e7", "ad", "35", "85", "e2", "f9", "37", "e8", "1c", "75", "df", "6e"},
+         {"47", "f1", "1a", "71", "1d", "29", "c5", "89", "6f", "b7", "62", "0e", "aa", "18", "be", "1b" },
+         {"fc", "56", "3e", "4b", "c6", "d2", "79", "20", "9a", "db", "c0", "fe", "78", "cd", "5a", "f4" },
+         {"1f", "dd", "a8", "33", "88", "07", "c7", "31", "b1", "12", "10", "59", "27", "80", "ec", "5f" },
+         {"60", "51", "7f", "a9", "19", "b5", "4a", "0d", "2d", "e5", "7a", "9f", "93", "c9", "9c", "ef" },
+         {"a0", "e0", "3b", "4d", "ae", "2a", "f5", "b0", "c8", "eb", "bb", "3c", "83", "53", "99", "61" },
+         {"17", "2b", "04", "7e", "ba", "77", "d6", "26", "e1", "69", "14", "63", "55", "21", "0c", "7d"}};
+
+
+
+
 int main(int argc, char* argv[]) {
     bool continueProgram = true;
 
@@ -74,43 +96,53 @@ int main(int argc, char* argv[]) {
         cout << "What option would you like?" << endl;
         cout << "Type '1' to AES Encrypt a file." << endl;
         cout << "Type '2' to AES Decrypt a file." << endl;
-        cout << "Type '3' to exit the program." << endl;
+        cout << "Type '3' to exit the program. " << endl;
 
         string userInput;
         cin >> userInput;
 
         if (userInput == "1") {
-            cout << "===================================" << endl;
-            cout << "What is the file name?" << endl;
-            string fileName;
-            cin >> fileName;
-
-            string fileContents;
-            ReadFile(fileName, fileContents);
+//            cout << "===================================" << endl;
+//            cout << "What is the file name?" << endl;
+//            string fileName;
+//            cin >> fileName;
+//
+//            string fileContents;
+//            ReadFile(fileName, fileContents);
 
             //Loop through fileContents and encrypt characters in batches of 16
-            string encryptedFile = "";
-            for (int i  = 0; i < fileContents.length(); i += 16) {
-                string localSubstring = fileContents.substr(i, 16);
-                //Search for illegal characters
-                for (int k  = 0; k < 16; k++) {
-                    if (localSubstring[k] == '-') {
-                        localSubstring.replace(k, 1, " ");
-                    }
+            //string encryptedFile = "";
+            string encryptedString = "";
+            string fileContents = "hii friendos bla";
+//            for (int i  = 0; i < fileContents.length(); i += 16) {
+//                string localSubstring = fileContents.substr(i, 16);
+//                //Search for illegal characters
+//                for (int k  = 0; k < 16; k++) {
 //                    if (localSubstring[k] == '-') {
 //                        localSubstring.replace(k, 1, " ");
 //                    }
-                }
-                string localEncryptedResult = "";
-                EncryptString(localSubstring, localEncryptedResult);
-                encryptedFile += localEncryptedResult;
-            }
+////                    if (localSubstring[k] == '-') {
+////                        localSubstring.replace(k, 1, " ");
+////                    }
+//                }
+//                string localEncryptedResult = "";
+//                EncryptString(localSubstring, localEncryptedResult);
+//                encryptedFile += localEncryptedResult;
+//            }
 
             //Encrypted file contents
+            EncryptString(fileContents, encryptedString);
             cout << "Encrypted File:" << endl;
-            cout << encryptedFile << endl;
+            //cout << encryptedFile << endl;
+            cout << encryptedString << endl;
         } else if (userInput == "2") {
             //Code for decrypting a file
+            string encryptedString = "ED 52 61 0A A8 5F B3 A3 E7 2F A8 AD 86 BE 8D EE";
+            string decryptedString = "";
+            EncryptString(encryptedString, decryptedString);
+            cout << "Decrypted File:" << endl;
+            //cout << encryptedFile << endl;
+            cout << decryptedString << endl;
 
         } else if (userInput == "3") {
             continueProgram = false;
@@ -133,6 +165,7 @@ void EncryptString(string originalString, string& encryptedString) {
         state[i] = new string[4];
     }
 
+    cout<<"State: "<<endl;
     int indexCounter = 0;
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -141,9 +174,14 @@ void EncryptString(string originalString, string& encryptedString) {
             oss << std::hex << int(originalString[indexCounter]);
             hex_representation = oss.str();
             state[i][j] = hex_representation;
+            cout<<state[i][j]<<" ";
             indexCounter++;
         }
+        cout<<endl;
     }
+    cout<<endl;
+
+
 
     //Allocate Key Data Structures
     string** keySchedule = new string*[4];
@@ -158,48 +196,375 @@ void EncryptString(string originalString, string& encryptedString) {
     //Generate Key Schedule
     keySchedule = KeyScheduler(keySchedule);
 
+    cout<<"RoundKey: "<<endl;
     //Before Rounds perform AddRoundKey
     for (int i = 0; i < 4; i++) {
         for (int j  = 0; j < 4; j++) {
             roundKey[i][j] = keySchedule[i][j];
+            cout<<roundKey[i][j]<<" ";
         }
+        cout<<endl;
     }
-    state = AddRoundKey(state, roundKey);
-    cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
+    cout<<endl;
 
+
+    state = AddRoundKey(state, roundKey);
+    cout<<"State after round key"<<endl;
+    for (int i = 0; i < 4; i++) {
+        for (int j  = 0; j < 4; j++) {
+            cout<<state[i][j]<<" ";
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+
+//    state = AddRoundKey(state, roundKey);
+//    cout<<"State after reverse round key"<<endl;
+//    for (int i = 0; i < 4; i++) {
+//        for (int j  = 0; j < 4; j++) {
+//            cout<<state[i][j]<<" ";
+//        }
+//        cout<<endl;
+//    }
+//    cout<<endl;
+
+    cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
     //Rounds 0-9
-    for (int round = 0; round < 9; round++) {
+    for (int round = 0; round < 10; round++) {
         //Fetch round key
         int currCol = (round+1) * 4;
+        cout<<"RoundKey: round "<<round<<endl;
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 roundKey[i][j] = keySchedule[j][currCol+i];
+                cout<<roundKey[i][j]<<" ";
             }
+            cout<<endl;
         }
+        cout<<endl;
+
+//        if( round >= 1) {
+//            currCol -= 4;
+//            for (int i = 0; i < 4; i++) {
+//                for (int j = 0; j < 4; j++) {
+//                    roundKey[i][j] = keySchedule[j][currCol+i];
+//                    cout<<roundKey[i][j]<<" ";
+//                }
+//                cout<<endl;
+//            }
+//            state = AddRoundKey(state, roundKey);
+            cout << "State:" << endl;
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    cout << state[i][j] << " ";
+                }
+                cout << endl;
+            }
+//            cout << endl;
+//            state = AddRoundKey(state, roundKey);
+//            cout << "round key called again" << endl;
+//            cout << "State after round key again floop" << endl;
+//            for (int i = 0; i < 4; i++) {
+//                for (int j = 0; j < 4; j++) {
+//                    cout << state[i][j] << " ";
+//                }
+//                cout << endl;
+//            }
+//            cout << endl;
+//        }
+//        currCol += 4;
 
 
         //Steps
-        state = SubByte(state);
-        state = ShiftRows(state);
-        //state = MixedColumns(state);
+        state = SubByte(state, "SBOX");
+        cout<<"State after sub byte"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+        state = SubByte(state, "ISBOX");
+        cout<<"State after reverse sub byte"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+//  after sub byte
+//        16 77 97 2c
+//        98 cd ae 7d
+//        7f d2 4e 55
+//        27 19 36 44
+//  reverse sub byte
+//        ff 02 85 42
+//        e2 80 be 8a
+//        7f b6 ed
+//        3d 8e 24 86
+
+
+        cout<<endl;
+        cout<<"sub byte called again"<<endl;
+        state = SubByte(state, "SBOX");
+        cout<<"state after sub byte again"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+
+        state = ShiftRows(state, "Left");
+        cout<<"State after shift row"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+        state = ShiftRows(state, "Right");
+        cout<<"State after reverse shift row"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+        cout<<"sift row called again"<<endl;
+        state = ShiftRows(state, "Left");
+        cout<<"State after shift row again"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+
+
+
         state = AddRoundKey(state, roundKey);
+        cout<<"State after add round key"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+        state = AddRoundKey(state, roundKey);
+        cout<<"State after reverse round key"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+        cout<<"Add round key called again"<<endl;
+        state = AddRoundKey(state, roundKey);
+        cout<<"State after add round key"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+
         cout << "ROUND " << (round+1) << " COMPLETE" << endl;
 //        PrintArrayDebug(state);
     }
 
-    //Round 10
-    //Fetch Round 10 Key
-    int currCol = (9) * 4;
+//    //Round 10
+//    //Fetch Round 10 Key
+//    int currCol = (9) * 4;
+//    for (int i = 0; i < 4; i++) {
+//        for (int j = 0; j < 4; j++) {
+//            roundKey[i][j] = keySchedule[j][currCol+i];
+//        }
+//    }
+//    //Round 10 Steps
+//    state = SubByte(state, "SBOX");
+//    state = ShiftRows(state, "Left");
+//    state = AddRoundKey(state, roundKey);
+//    cout << "ROUND 10 COMPLETE" << endl;
+
+    //Cipher Text
+    string returnString = "";
+
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            roundKey[i][j] = keySchedule[j][currCol+i];
+            returnString += state[i][j] + " ";
         }
     }
-    //Round 10 Steps
-    state = SubByte(state);
-    state = ShiftRows(state);
+    encryptedString = returnString;
+
+    //Deallocate arrays
+    for (int i = 0; i < rows; i++) {
+        delete [] state[i];
+    }
+    delete [] state;
+
+    for (int i = 0; i < 4; i++) {
+        delete [] keySchedule[i];
+    }
+    delete [] keySchedule;
+
+    for (int i = 0; i < 4; i++) {
+        delete [] roundKey[i];
+    }
+    delete [] roundKey;
+}
+
+//Takes in the original 16 character string and returns an encrypted 16 character string
+void DecryptString(string encryptedString, string& decryptedString) {
+    //First make original state matrix
+    int rows = 4;
+    string** state = new string*[rows];
+    for (int i = 0; i < rows; ++i) {
+        state[i] = new string[4];
+    }
+
+    cout<<"State: "<<endl;
+    int indexCounter = 0;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            ostringstream oss;
+            string hex_representation;
+            oss << std::hex << int(encryptedString[indexCounter]);
+            hex_representation = oss.str();
+            state[i][j] = hex_representation;
+            cout<<state[i][j]<<" ";
+            indexCounter++;
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+
+
+
+    //Allocate Key Data Structures
+    string** keySchedule = new string*[4];
+    for (int i = 0; i < 4; ++i) {
+        keySchedule[i] = new string[44];
+    }
+    string** roundKey = new string*[4];
+    for (int i = 0; i < 4; ++i) {
+        roundKey[i] = new string[4];
+    }
+
+    //Generate Key Schedule
+    keySchedule = KeyScheduler(keySchedule);
+
+
+
+
     state = AddRoundKey(state, roundKey);
-    cout << "ROUND 10 COMPLETE" << endl;
+    cout<<"State after round key"<<endl;
+    for (int i = 0; i < 4; i++) {
+        for (int j  = 0; j < 4; j++) {
+            cout<<state[i][j]<<" ";
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+
+
+    cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
+    int currCol = 0;
+    //Rounds 0-9
+    for (int round = 9; round >= 0; round--) {
+        //Fetch round key
+        currCol = (round+1) * 4;
+        cout<<"RoundKey: round "<<round<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                roundKey[i][j] = keySchedule[j][currCol+i];
+                cout<<roundKey[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+        state = AddRoundKey(state, roundKey);
+        cout << "State after reverse round key" << endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                cout << state[i][j] << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+
+        state = ShiftRows(state, "Right");
+        cout<<"State after reverse shift row"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+
+        //Steps
+        state = SubByte(state, "ISBOX");
+        cout<<"State after reverse sub byte"<<endl;
+        for (int i = 0; i < 4; i++) {
+            for (int j  = 0; j < 4; j++) {
+                cout<<state[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+
+
+        cout << "ROUND " << (round+1) << " COMPLETE" << endl;
+        PrintArrayDebug(state);
+    }
+
+
+    cout<<"RoundKey: "<<endl;
+
+    //Before Rounds perform AddRoundKey
+
+    for (int i = 0; i < 4; i++) {
+        for (int j  = 0; j < 4; j++) {
+            roundKey[i][j] = keySchedule[i][j];
+            cout<<roundKey[i][j]<<" ";
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+
+
+    state = AddRoundKey(state, roundKey);
+    cout<<"State after last reverse round key"<<endl;
+    for (int i = 0; i < 4; i++) {
+        for (int j  = 0; j < 4; j++) {
+            cout<<state[i][j]<<" ";
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+
+
+
+
+
 
     //Cipher Text
     string returnString = "";
@@ -467,19 +832,29 @@ string** AddRoundKey(string** state, string** roundKey) {
 }
 
 //Encryption Sub Byte Step
-string** SubByte(string** state) {
+string** SubByte(string** state, string fromList) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
+            cout<<"i = "<<i<<" and j = "<<j<<endl;
             int x = stoi(state[i][j].substr(0,1), nullptr, 16);
             int y = stoi(state[i][j].substr(1,1), nullptr, 16);
-            state[i][j] = SBOX[x][y];
+            cout<<"x = "<<x<<" and y = "<<y<<endl;
+            if(fromList == "SBOX") {
+                state[i][j] = SBOX[x][y];
+                //cout<<"state[i][j] = "<<state[i][j]<<endl;
+            }else{
+
+                state[i][j] = ISBOX[x][y];
+                cout<<"ISBOX[i][j] = "<<ISBOX[x][y]<<endl;
+                cout<<" invrser state[i][j] = "<<state[i][j]<<endl;
+            }
         }
     }
     return state;
 }
 
 //Encryption Shift Rows Step
-string** ShiftRows(string** state) {
+string** ShiftRows(string** state, string direction) {
     for (int i = 0; i < 4; i++) {
         //Grab original row
         string originalRow[4];
@@ -488,7 +863,12 @@ string** ShiftRows(string** state) {
         }
         //Shift the bytes
         string shiftedRow[4];
-        int shiftedIndex = (i);
+        int shiftedIndex = 0;
+        if(direction == "Left") {
+            shiftedIndex = (i);
+        }else{
+            shiftedIndex = (i*3)%4;
+        }
         for (int j = 0; j < 4; j++) {
             shiftedRow[j] = originalRow[shiftedIndex];
             shiftedIndex++;
