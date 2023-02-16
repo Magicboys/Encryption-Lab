@@ -21,7 +21,7 @@ using std::ostringstream;
 
 //Method Headers
 void ReadFile(string fileName, string& fileContents);
-void WriteToFile(string fileContents);
+void WriteToFile(string fileName, string fileContents);
 void EncryptString(string originalString, string& encryptedString);
 void DecryptString(string encryptedString, string& decryptedString);
 
@@ -129,18 +129,58 @@ int main(int argc, char* argv[]) {
             }
 
             //Encrypted file contents
-            EncryptString(fileContents, encryptedString);
+            //EncryptString(fileContents, encryptedString);
+            //encryptedFile += encryptedString;
             cout << "Encrypted File:" << endl;
-            //cout << encryptedFile << endl;
-            cout << encryptedString << endl;
+            cout << encryptedFile << endl;
+            //cout << encryptedString << endl;
+
+            WriteToFile( "output.txt", encryptedFile);
+
         } else if (userInput == "2") {
-            //Code for decrypting a file
-            string encryptedString = "ED4136BED8A3DBD53CF50D9577ED63B2";
-            string decryptedString = "";
-            DecryptString(encryptedString, decryptedString);
-            cout << "Decrypted File:" << endl;
-            //cout << encryptedFile << endl;
-            cout << decryptedString << endl;
+//            //Code for decrypting a file
+//            string encryptedString = "ED4136BED8A3DBD53CF50D9577ED63B2";
+//            string decryptedString = "";
+//            DecryptString(encryptedString, decryptedString);
+//            cout << "Decrypted File:" << endl;
+//            //cout << encryptedFile << endl;
+//            cout << decryptedString << endl;
+
+
+            cout << "===================================" << endl;
+            cout << "What is the output file name?" << endl;
+            string fileName;
+            cin >> fileName;
+
+            string fileContents;
+
+            WriteToFile(fileName, fileContents);
+
+            //Loop through fileContents and encrypt characters in batches of 16
+            string encryptedFile = "";
+            string encryptedString = "";
+            //string fileContents = "hii friendos bla";
+            for (int i  = 0; i < fileContents.length(); i += 16) {
+                string localSubstring = fileContents.substr(i, 16);
+                //Search for illegal characters
+                for (int k  = 0; k < 16; k++) {
+                    if (localSubstring[k] == '-') {
+                        localSubstring.replace(k, 1, " ");
+                    }
+
+                }
+                string localEncryptedResult = "";
+                EncryptString(localSubstring, localEncryptedResult);
+                encryptedFile += localEncryptedResult;
+            }
+
+            //Encrypted file contents
+            //EncryptString(fileContents, encryptedString);
+            //encryptedFile += encryptedString;
+            cout << "Encrypted File:" << endl;
+            cout << encryptedFile << endl;
+
+
 
         } else if (userInput == "3") {
             continueProgram = false;
@@ -1020,6 +1060,19 @@ void ReadFile(string fileName, string& fileContents) {
             result << '\n';
         }
         fileContents = result.str();
+    } else {
+        cout << fileName << " doesn't exist!" << endl;
+        return;
+    }
+    file.close();
+}
+
+void WriteToFile(string fileName, string& fileContents) {
+    ofstream file;
+    file.open(fileName);
+    if (file.good()){
+        string line;
+        file<<fileContents;
     } else {
         cout << fileName << " doesn't exist!" << endl;
         return;
