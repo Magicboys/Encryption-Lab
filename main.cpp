@@ -148,8 +148,6 @@ int main(int argc, char* argv[]) {
 
         } else if (userInput == "2") {
             //Code for decrypting a file
-
-
             cout << "===================================" << endl;
             string fileContents;
             ReadFile("encrypted_file.txt", fileContents);
@@ -168,12 +166,11 @@ int main(int argc, char* argv[]) {
             }
 
             //Encrypted file contents
-            cout << decryptedFile << endl;
             string stringFile = "";
             HexToText( decryptedFile, stringFile );
+            cout << "Decrypted Test:" << endl;
+            cout << decryptedFile << endl;
             WriteToFile("decrypted_file.txt", stringFile);
-
-
         } else if (userInput == "3") {
             continueProgram = false;
         } else {
