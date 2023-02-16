@@ -30,6 +30,7 @@ string** AddRoundKey(string** state, string** roundKey);
 string** SubByte(string** state, string fromList);
 string** ShiftRows(string** state, string direction);
 string** MixedColumns(string** state);
+void HexToBinary(int original, int& binaryValue);
 
 //Helper methods
 string** KeyScheduler(string** keySchedule);
@@ -115,14 +116,26 @@ int main(int argc, char* argv[]) {
             string encryptedString = "";
             //string fileContents = "hii friendos bla";
             for (int i  = 0; i < fileContents.length(); i += 16) {
-                string localSubstring = fileContents.substr(i, 16);
-                //Search for illegal characters
-                for (int k  = 0; k < 16; k++) {
-                    if (localSubstring[k] == '-') {
-                        localSubstring.replace(k, 1, " ");
-                    }
 
+                string localSubstring = "";
+                int diff = fileContents.length()-i;
+                if(diff >= 16){
+                    localSubstring = fileContents.substr(i, 16);
+                }else {
+                    localSubstring = fileContents.substr(i, diff);
                 }
+
+//                cout<<"len = "<<localSubstring.length()<<endl;
+//                cout<<"i = "<<i<<endl;
+//                cout<<"localsub = |"<<localSubstring<<"|"<<endl;
+//
+                if(localSubstring.length() < 16) {
+                    for (int j = 0; j < (16 - localSubstring.length()); j++) {
+                        localSubstring += " ";
+                    }
+                }
+
+                //Search for illegal characters
                 string localEncryptedResult = "";
                 EncryptString(localSubstring, localEncryptedResult);
                 encryptedFile += localEncryptedResult;
@@ -148,37 +161,44 @@ int main(int argc, char* argv[]) {
 
 
             cout << "===================================" << endl;
-            cout << "What is the output file name?" << endl;
-            string fileName;
-            cin >> fileName;
+//            cout << "What is the output file name?" << endl;
+//            string fileName;
+//            cin >> fileName;
 
             string fileContents;
+            ReadFile("output.txt", fileContents);
 
-            WriteToFile(fileName, fileContents);
 
             //Loop through fileContents and encrypt characters in batches of 16
-            string encryptedFile = "";
-            string encryptedString = "";
+            string decryptedFile = "";
+            //string encryptedString = "";
             //string fileContents = "hii friendos bla";
-            for (int i  = 0; i < fileContents.length(); i += 16) {
-                string localSubstring = fileContents.substr(i, 16);
-                //Search for illegal characters
-                for (int k  = 0; k < 16; k++) {
-                    if (localSubstring[k] == '-') {
-                        localSubstring.replace(k, 1, " ");
-                    }
+            cout<<"len  = "<<fileContents.length()<<endl;
+            for (int i  = 0; i < fileContents.length(); i += 32) {
+                cout<<"len  = "<<fileContents.length()<<endl;
 
-                }
+                string localSubstring = fileContents.substr(i, 32);
+//                string localSubstring = "";
+//                int diff = fileContents.length()-i;
+//                if(diff >= 32){
+//                    localSubstring = fileContents.substr(i, 32);
+//                }else{
+//                    localSubstring = fileContents.substr(i, diff);
+//                }
+
+                cout<<"i  = "<<i<<endl;
+                //Search for illegal characters
                 string localEncryptedResult = "";
-                EncryptString(localSubstring, localEncryptedResult);
-                encryptedFile += localEncryptedResult;
+                cout<<"localSubstring = "<<localSubstring<<endl;
+                DecryptString(localSubstring, localEncryptedResult);
+                decryptedFile += localEncryptedResult;
             }
 
             //Encrypted file contents
             //EncryptString(fileContents, encryptedString);
             //encryptedFile += encryptedString;
-            cout << "Encrypted File:" << endl;
-            cout << encryptedFile << endl;
+            cout << "decrypted File:" << endl;
+            cout << decryptedFile << endl;
 
 
 
@@ -493,23 +513,23 @@ void DecryptString(string encryptedString, string& decryptedString) {
     cout<<"State: "<<endl;
     int indexCounter = 0;
 
-//    string x (1,encryptedString.at(indexCounter++));
-//    string y (1, encryptedString.at(indexCounter++));
-//
-//
-//    cout << "x = "<<x<< " y = "<<y<<endl;
-//    cout << "enc = "<<x+y<<endl;
+    cout<<"len = "<<encryptedString.length()<<endl;
     for (int i = 0; i < 4; i++) {
-
-        //cout<<"i = "<<i<<endl;
         for (int j = 0; j < 4; j++) {
-            string x (1, encryptedString.at(indexCounter++));
-            string y (1, encryptedString.at(indexCounter++));
+            cout<<"here 111"<<endl;
+            cout<<"indexCounter = "<<indexCounter<<endl;
+            string x (1, encryptedString.at(indexCounter));
+            indexCounter++;
+            cout<<"here 12232"<<endl;
+            cout<<"indexCounter = "<<indexCounter<<endl;
+            string y (1, encryptedString.at(indexCounter));
+            indexCounter++;
+            cout<<"indexCounter = "<<indexCounter<<endl;
+            cout<<"here 134324324"<<endl;
             state[i][j] = x+y;
-
-            //cout<<"j = "<<j<<endl;
             cout << state[i][j] << " ";
         }
+        cout<<"here 13434343434343434"<<endl;
 
         cout<<endl;
 
@@ -517,6 +537,7 @@ void DecryptString(string encryptedString, string& decryptedString) {
     cout<<"here 1"<<endl;
 
 
+    //indexCounter = 0;
 
     //Allocate Key Data Structures
     string** keySchedule = new string*[4];
@@ -654,7 +675,7 @@ void DecryptString(string encryptedString, string& decryptedString) {
     }
     encryptedString = returnString;
 
-    cout<<"return string"<<returnString<<endl;
+    cout<<"return string: "<<returnString<<endl;
 
     //Deallocate arrays
     for (int i = 0; i < rows; i++) {
@@ -926,18 +947,18 @@ string** AddRoundKey(string** state, string** roundKey) {
 string** SubByte(string** state, string fromList) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            cout<<"i = "<<i<<" and j = "<<j<<endl;
+           // cout<<"i = "<<i<<" and j = "<<j<<endl;
             int x = stoi(state[i][j].substr(0,1), nullptr, 16);
             int y = stoi(state[i][j].substr(1,1), nullptr, 16);
-            cout<<"x = "<<x<<" and y = "<<y<<endl;
+            //cout<<"x = "<<x<<" and y = "<<y<<endl;
             if(fromList == "SBOX") {
                 state[i][j] = SBOX[x][y];
-                cout<<"state[i][j] = "<<state[i][j]<<endl;
+                //cout<<"state[i][j] = "<<state[i][j]<<endl;
             }else{
 
                 state[i][j] = ISBOX[x][y];
-                cout<<"ISBOX[i][j] = "<<ISBOX[x][y]<<endl;
-                cout<<" invrser state[i][j] = "<<state[i][j]<<endl;
+                //cout<<"ISBOX[i][j] = "<<ISBOX[x][y]<<endl;
+               // cout<<" invrser state[i][j] = "<<state[i][j]<<endl;
             }
         }
     }
@@ -1067,7 +1088,7 @@ void ReadFile(string fileName, string& fileContents) {
     file.close();
 }
 
-void WriteToFile(string fileName, string& fileContents) {
+void WriteToFile(string fileName, string fileContents) {
     ofstream file;
     file.open(fileName);
     if (file.good()){
