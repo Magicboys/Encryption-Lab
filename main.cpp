@@ -29,17 +29,15 @@ void DecryptString(string encryptedString, string& decryptedString);
 string** AddRoundKey(string** state, string** roundKey);
 string** SubByte(string** state, string fromList);
 string** ShiftRows(string** state, string direction);
-string** MixedColumns(string** state);
 void HexToBinary(int original, int& binaryValue);
+void HexToText(string hexFile, string &stringFile );
 
 //Helper methods
 string** KeyScheduler(string** keySchedule);
 void HexToBinary(int original, int& binaryValue);
 string PruneBinaryNumber(string original);
 string BinaryToHex(const string& binaryString);
-string IrreduciblePolynomialTheorem(string original);
 void PrintArrayDebug(string** state);
-string GalosisFieldBinaryMultiplication(unsigned int a, unsigned int b);
 
 //Global Constants
 //AES Key
@@ -123,13 +121,11 @@ int main(int argc, char* argv[]) {
 
                 string localSubstring = "";
                 int diff = fileContents.length()-i;
-                cout<<"diff = "<<diff<<endl;
                 if(diff >= 16){
                     localSubstring = fileContents.substr(i, 16);
                 }else {
                     localSubstring = fileContents.substr(i, diff);
                 }
-
 
                 int len = localSubstring.length();
                 if(localSubstring.length() < 16) {
@@ -148,19 +144,19 @@ int main(int argc, char* argv[]) {
             cout << "Encrypted File:" << endl;
             cout << encryptedFile << endl;
 
-            WriteToFile( "output.txt", encryptedFile);
+            WriteToFile( "encrypted_file.txt", encryptedFile);
 
         } else if (userInput == "2") {
             //Code for decrypting a file
 
+
             cout << "===================================" << endl;
             string fileContents;
-            ReadFile("output.txt", fileContents);
+            ReadFile("encrypted_file.txt", fileContents);
 
             //Loop through fileContents and encrypt characters in batches of 16
             string decryptedFile = "";
             for (int i  = 0; i < fileContents.length()-1; i += 32) {
-                cout<<"len  = "<<fileContents.length()<<endl;
 
                 string localSubstring = fileContents.substr(i, 32);
 
@@ -173,6 +169,9 @@ int main(int argc, char* argv[]) {
 
             //Encrypted file contents
             cout << decryptedFile << endl;
+            string stringFile = "";
+            HexToText( decryptedFile, stringFile );
+            WriteToFile("decrypted_file.txt", stringFile);
 
 
         } else if (userInput == "3") {
@@ -353,19 +352,16 @@ void DecryptString(string encryptedString, string& decryptedString) {
         state = SubByte(state, "ISBOX");
 
         cout << "ROUND " << (round+1) << " COMPLETE" << endl;
-        //PrintArrayDebug(state);
     }
 
 
 
     //Before Rounds perform AddRoundKey
-
     for (int i = 0; i < 4; i++) {
         for (int j  = 0; j < 4; j++) {
             roundKey[i][j] = keySchedule[i][j];
         }
     }
-
 
     state = AddRoundKey(state, roundKey);
 
@@ -381,6 +377,7 @@ void DecryptString(string encryptedString, string& decryptedString) {
 
 
     decryptedString = returnString;
+
 
 
     //Deallocate arrays
@@ -589,6 +586,21 @@ string BinaryToHex(const string& binaryString) {
     }
     return hex;
 }
+
+void HexToText(string hexString, string &stringFile ){
+
+    string hexToString = "";
+    for (size_t i = 0; i < hexString.length(); i += 2){
+        string part = hexString.substr(i, 2);
+        char  hexToChar = stoul(part, nullptr, 16);
+        hexToString += hexToChar;
+    }
+
+    stringFile = hexToString;
+
+
+}
+
 
 //Prune binary numbers that may have values that may have other numbers than 1's or 0's from a primitive operation
 //Also verifies that the binary string has 8 characters
