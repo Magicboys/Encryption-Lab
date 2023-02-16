@@ -58,7 +58,7 @@ const string SBOX [16][16] = {{"63", "7c", "77", "7b","f2", "6b", "6f", "c5", "3
                         {"51", "a3", "40", "8f","92", "9d", "38", "f5", "bc", "b6", "da", "21", "10", "ff", "f3", "d2"},
                         {"cd", "0c", "13", "ec","5f", "97", "44", "17", "c4", "a7", "7e", "3d", "64", "5d", "19", "73"},
                         {"60", "81", "4f", "dc","22", "2a", "90", "88", "46", "ee", "b8", "14", "de", "5e", "0b", "db"},
-                        {"e0", "37", "3a", "0a","49", "06", "24", "5c", "c2", "d3", "ac", "62", "91", "95", "e4", "79"},
+                        {"e0", "32", "3a", "0a","49", "06", "24", "5c", "c2", "d3", "ac", "62", "91", "95", "e4", "79"},
                         {"e7", "c8", "37", "6d","8d", "d5", "4e", "a9", "6c", "56", "f4", "ea", "65", "7a", "ae", "08"},
                         {"ba", "78", "25", "2e","1c", "a6", "b4", "c6", "e8", "dd", "74", "1f", "4b", "bd", "8b", "8a"},
                         {"70", "3e", "b5", "66","48", "03", "f6", "0e", "61", "35", "57", "b9", "86", "c1", "1d", "9e"},
@@ -102,33 +102,31 @@ int main(int argc, char* argv[]) {
         cin >> userInput;
 
         if (userInput == "1") {
-//            cout << "===================================" << endl;
-//            cout << "What is the file name?" << endl;
-//            string fileName;
-//            cin >> fileName;
-//
-//            string fileContents;
-//            ReadFile(fileName, fileContents);
+            cout << "===================================" << endl;
+            cout << "What is the file name?" << endl;
+            string fileName;
+            cin >> fileName;
+
+            string fileContents;
+            ReadFile(fileName, fileContents);
 
             //Loop through fileContents and encrypt characters in batches of 16
-            //string encryptedFile = "";
+            string encryptedFile = "";
             string encryptedString = "";
-            string fileContents = "hii friendos bla";
-//            for (int i  = 0; i < fileContents.length(); i += 16) {
-//                string localSubstring = fileContents.substr(i, 16);
-//                //Search for illegal characters
-//                for (int k  = 0; k < 16; k++) {
-//                    if (localSubstring[k] == '-') {
-//                        localSubstring.replace(k, 1, " ");
-//                    }
-////                    if (localSubstring[k] == '-') {
-////                        localSubstring.replace(k, 1, " ");
-////                    }
-//                }
-//                string localEncryptedResult = "";
-//                EncryptString(localSubstring, localEncryptedResult);
-//                encryptedFile += localEncryptedResult;
-//            }
+            //string fileContents = "hii friendos bla";
+            for (int i  = 0; i < fileContents.length(); i += 16) {
+                string localSubstring = fileContents.substr(i, 16);
+                //Search for illegal characters
+                for (int k  = 0; k < 16; k++) {
+                    if (localSubstring[k] == '-') {
+                        localSubstring.replace(k, 1, " ");
+                    }
+
+                }
+                string localEncryptedResult = "";
+                EncryptString(localSubstring, localEncryptedResult);
+                encryptedFile += localEncryptedResult;
+            }
 
             //Encrypted file contents
             EncryptString(fileContents, encryptedString);
@@ -137,7 +135,7 @@ int main(int argc, char* argv[]) {
             cout << encryptedString << endl;
         } else if (userInput == "2") {
             //Code for decrypting a file
-            string encryptedString = "ED4136BED8A3DBD5AFF50D9577ED63B2";
+            string encryptedString = "ED4136BED8A3DBD53CF50D9577ED63B2";
             string decryptedString = "";
             DecryptString(encryptedString, decryptedString);
             cout << "Decrypted File:" << endl;
@@ -297,14 +295,14 @@ void EncryptString(string originalString, string& encryptedString) {
             cout<<endl;
         }
         cout<<endl;
-        state = SubByte(state, "ISBOX");
-        cout<<"State after reverse sub byte"<<endl;
-        for (int i = 0; i < 4; i++) {
-            for (int j  = 0; j < 4; j++) {
-                cout<<state[i][j]<<" ";
-            }
-            cout<<endl;
-        }
+//        state = SubByte(state, "ISBOX");
+//        cout<<"State after reverse sub byte"<<endl;
+//        for (int i = 0; i < 4; i++) {
+//            for (int j  = 0; j < 4; j++) {
+//                cout<<state[i][j]<<" ";
+//            }
+//            cout<<endl;
+//        }
 //  after sub byte
 //        16 77 97 2c
 //        98 cd ae 7d
@@ -317,17 +315,17 @@ void EncryptString(string originalString, string& encryptedString) {
 //        3d 8e 24 86
 
 
-        cout<<endl;
-        cout<<"sub byte called again"<<endl;
-        state = SubByte(state, "SBOX");
-        cout<<"state after sub byte again"<<endl;
-        for (int i = 0; i < 4; i++) {
-            for (int j  = 0; j < 4; j++) {
-                cout<<state[i][j]<<" ";
-            }
-            cout<<endl;
-        }
-        cout<<endl;
+//        cout<<endl;
+//        cout<<"sub byte called again"<<endl;
+//        state = SubByte(state, "SBOX");
+//        cout<<"state after sub byte again"<<endl;
+//        for (int i = 0; i < 4; i++) {
+//            for (int j  = 0; j < 4; j++) {
+//                cout<<state[i][j]<<" ";
+//            }
+//            cout<<endl;
+//        }
+//        cout<<endl;
 
 
         state = ShiftRows(state, "Left");
@@ -340,26 +338,26 @@ void EncryptString(string originalString, string& encryptedString) {
         }
         cout<<endl;
 
-        state = ShiftRows(state, "Right");
-        cout<<"State after reverse shift row"<<endl;
-        for (int i = 0; i < 4; i++) {
-            for (int j  = 0; j < 4; j++) {
-                cout<<state[i][j]<<" ";
-            }
-            cout<<endl;
-        }
-        cout<<endl;
-
-        cout<<"sift row called again"<<endl;
-        state = ShiftRows(state, "Left");
-        cout<<"State after shift row again"<<endl;
-        for (int i = 0; i < 4; i++) {
-            for (int j  = 0; j < 4; j++) {
-                cout<<state[i][j]<<" ";
-            }
-            cout<<endl;
-        }
-        cout<<endl;
+//        state = ShiftRows(state, "Right");
+//        cout<<"State after reverse shift row"<<endl;
+//        for (int i = 0; i < 4; i++) {
+//            for (int j  = 0; j < 4; j++) {
+//                cout<<state[i][j]<<" ";
+//            }
+//            cout<<endl;
+//        }
+//        cout<<endl;
+//
+//        cout<<"sift row called again"<<endl;
+//        state = ShiftRows(state, "Left");
+//        cout<<"State after shift row again"<<endl;
+//        for (int i = 0; i < 4; i++) {
+//            for (int j  = 0; j < 4; j++) {
+//                cout<<state[i][j]<<" ";
+//            }
+//            cout<<endl;
+//        }
+//        cout<<endl;
 
 
 
@@ -374,26 +372,26 @@ void EncryptString(string originalString, string& encryptedString) {
         }
         cout<<endl;
 
-        state = AddRoundKey(state, roundKey);
-        cout<<"State after reverse round key"<<endl;
-        for (int i = 0; i < 4; i++) {
-            for (int j  = 0; j < 4; j++) {
-                cout<<state[i][j]<<" ";
-            }
-            cout<<endl;
-        }
-        cout<<endl;
-
-        cout<<"Add round key called again"<<endl;
-        state = AddRoundKey(state, roundKey);
-        cout<<"State after add round key"<<endl;
-        for (int i = 0; i < 4; i++) {
-            for (int j  = 0; j < 4; j++) {
-                cout<<state[i][j]<<" ";
-            }
-            cout<<endl;
-        }
-        cout<<endl;
+//        state = AddRoundKey(state, roundKey);
+//        cout<<"State after reverse round key"<<endl;
+//        for (int i = 0; i < 4; i++) {
+//            for (int j  = 0; j < 4; j++) {
+//                cout<<state[i][j]<<" ";
+//            }
+//            cout<<endl;
+//        }
+//        cout<<endl;
+//
+//        cout<<"Add round key called again"<<endl;
+//        state = AddRoundKey(state, roundKey);
+//        cout<<"State after add round key"<<endl;
+//        for (int i = 0; i < 4; i++) {
+//            for (int j  = 0; j < 4; j++) {
+//                cout<<state[i][j]<<" ";
+//            }
+//            cout<<endl;
+//        }
+//        cout<<endl;
 
 
         cout << "ROUND " << (round+1) << " COMPLETE" << endl;
@@ -573,7 +571,7 @@ void DecryptString(string encryptedString, string& decryptedString) {
 
 
         cout << "ROUND " << (round+1) << " COMPLETE" << endl;
-        PrintArrayDebug(state);
+        //PrintArrayDebug(state);
     }
 
 
@@ -888,18 +886,18 @@ string** AddRoundKey(string** state, string** roundKey) {
 string** SubByte(string** state, string fromList) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            //cout<<"i = "<<i<<" and j = "<<j<<endl;
+            cout<<"i = "<<i<<" and j = "<<j<<endl;
             int x = stoi(state[i][j].substr(0,1), nullptr, 16);
             int y = stoi(state[i][j].substr(1,1), nullptr, 16);
-            //cout<<"x = "<<x<<" and y = "<<y<<endl;
+            cout<<"x = "<<x<<" and y = "<<y<<endl;
             if(fromList == "SBOX") {
                 state[i][j] = SBOX[x][y];
-                //cout<<"state[i][j] = "<<state[i][j]<<endl;
+                cout<<"state[i][j] = "<<state[i][j]<<endl;
             }else{
 
                 state[i][j] = ISBOX[x][y];
-                //cout<<"ISBOX[i][j] = "<<ISBOX[x][y]<<endl;
-                //cout<<" invrser state[i][j] = "<<state[i][j]<<endl;
+                cout<<"ISBOX[i][j] = "<<ISBOX[x][y]<<endl;
+                cout<<" invrser state[i][j] = "<<state[i][j]<<endl;
             }
         }
     }
