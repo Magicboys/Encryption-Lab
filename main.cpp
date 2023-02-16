@@ -23,7 +23,7 @@ using std::ostringstream;
 void ReadFile(string fileName, string& fileContents);
 void WriteToFile(string fileContents);
 void EncryptString(string originalString, string& encryptedString);
-void decryptString(string encryptedString, string& decryptedString);
+void DecryptString(string encryptedString, string& decryptedString);
 
 //Encryption Step Methods
 string** AddRoundKey(string** state, string** roundKey);
@@ -137,9 +137,9 @@ int main(int argc, char* argv[]) {
             cout << encryptedString << endl;
         } else if (userInput == "2") {
             //Code for decrypting a file
-            string encryptedString = "ED 52 61 0A A8 5F B3 A3 E7 2F A8 AD 86 BE 8D EE";
+            string encryptedString = "ED4136BED8A3DBD5AFF50D9577ED63B2";
             string decryptedString = "";
-            EncryptString(encryptedString, decryptedString);
+            DecryptString(encryptedString, decryptedString);
             cout << "Decrypted File:" << endl;
             //cout << encryptedFile << endl;
             cout << decryptedString << endl;
@@ -165,14 +165,18 @@ void EncryptString(string originalString, string& encryptedString) {
         state[i] = new string[4];
     }
 
+    cout<<"og string = "<<originalString<<endl;
     cout<<"State: "<<endl;
     int indexCounter = 0;
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
             ostringstream oss;
             string hex_representation;
+            //cout<<"indexCounter = "<<indexCounter<<endl;
             oss << std::hex << int(originalString[indexCounter]);
+           // cout<<"originalString = "<<originalString[indexCounter]<<endl;
             hex_representation = oss.str();
+            //cout<<"hex rep = "<<hex_representation<<endl;
             state[i][j] = hex_representation;
             cout<<state[i][j]<<" ";
             indexCounter++;
@@ -195,6 +199,14 @@ void EncryptString(string originalString, string& encryptedString) {
 
     //Generate Key Schedule
     keySchedule = KeyScheduler(keySchedule);
+
+    cout<<"all keys: "<<endl;
+    for(int i = 0; i<4; i++){
+        for (int j  = 0; j < 44; j++) {
+            cout<<keySchedule[i][j]<<" ";
+        }
+    }
+    cout<<endl;
 
     cout<<"RoundKey: "<<endl;
     //Before Rounds perform AddRoundKey
@@ -236,7 +248,7 @@ void EncryptString(string originalString, string& encryptedString) {
         cout<<"RoundKey: round "<<round<<endl;
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
-                roundKey[i][j] = keySchedule[j][currCol+i];
+                roundKey[i][j] = keySchedule[i][currCol+j];
                 cout<<roundKey[i][j]<<" ";
             }
             cout<<endl;
@@ -407,7 +419,7 @@ void EncryptString(string originalString, string& encryptedString) {
 
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            returnString += state[i][j] + " ";
+            returnString += state[i][j];
         }
     }
     encryptedString = returnString;
@@ -438,21 +450,33 @@ void DecryptString(string encryptedString, string& decryptedString) {
         state[i] = new string[4];
     }
 
+    cout<<"og encrypted = "<<encryptedString<<endl;
+
     cout<<"State: "<<endl;
     int indexCounter = 0;
+
+//    string x (1,encryptedString.at(indexCounter++));
+//    string y (1, encryptedString.at(indexCounter++));
+//
+//
+//    cout << "x = "<<x<< " y = "<<y<<endl;
+//    cout << "enc = "<<x+y<<endl;
     for (int i = 0; i < 4; i++) {
+
+        //cout<<"i = "<<i<<endl;
         for (int j = 0; j < 4; j++) {
-            ostringstream oss;
-            string hex_representation;
-            oss << std::hex << int(encryptedString[indexCounter]);
-            hex_representation = oss.str();
-            state[i][j] = hex_representation;
-            cout<<state[i][j]<<" ";
-            indexCounter++;
+            string x (1, encryptedString.at(indexCounter++));
+            string y (1, encryptedString.at(indexCounter++));
+            state[i][j] = x+y;
+
+            //cout<<"j = "<<j<<endl;
+            cout << state[i][j] << " ";
         }
+
         cout<<endl;
+
     }
-    cout<<endl;
+    cout<<"here 1"<<endl;
 
 
 
@@ -466,21 +490,37 @@ void DecryptString(string encryptedString, string& decryptedString) {
         roundKey[i] = new string[4];
     }
 
+    cout<<"here 2"<<endl;
     //Generate Key Schedule
     keySchedule = KeyScheduler(keySchedule);
 
+    cout<<"here 3"<<endl;
 
-
-
-    state = AddRoundKey(state, roundKey);
-    cout<<"State after round key"<<endl;
+    cout<<"RoundKey: "<<endl;
+    //Before Rounds perform AddRoundKey
     for (int i = 0; i < 4; i++) {
         for (int j  = 0; j < 4; j++) {
-            cout<<state[i][j]<<" ";
+            roundKey[i][j] = keySchedule[i][j+40];
+            cout<<roundKey[i][j]<<" ";
         }
         cout<<endl;
     }
     cout<<endl;
+
+    cout<<"here 4"<<endl;
+
+//    state = AddRoundKey(state, roundKey);
+//
+//    cout<<"here 5"<<endl;
+//
+//    cout<<"State after round key"<<endl;
+//    for (int i = 0; i < 4; i++) {
+//        for (int j  = 0; j < 4; j++) {
+//            cout<<state[i][j]<<" ";
+//        }
+//        cout<<endl;
+//    }
+//    cout<<endl;
 
 
     cout << "INITIAL ADD ROUND KEY COMPLETE" << endl;
@@ -492,7 +532,7 @@ void DecryptString(string encryptedString, string& decryptedString) {
         cout<<"RoundKey: round "<<round<<endl;
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
-                roundKey[i][j] = keySchedule[j][currCol+i];
+                roundKey[i][j] = keySchedule[i][currCol+j];
                 cout<<roundKey[i][j]<<" ";
             }
             cout<<endl;
@@ -575,6 +615,8 @@ void DecryptString(string encryptedString, string& decryptedString) {
         }
     }
     encryptedString = returnString;
+
+    cout<<"return string"<<returnString<<endl;
 
     //Deallocate arrays
     for (int i = 0; i < rows; i++) {
@@ -792,13 +834,24 @@ string IrreduciblePolynomialTheorem(string original) {
 
 //Encryption AddRoundKey Step
 string** AddRoundKey(string** state, string** roundKey) {
+   // cout<<"here 11"<<endl;
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            //Convert both columns from hex to binary strings
+           // Convert both columns from hex to binary strings
             int aBinary = 0;
             int bBinary = 0;
+
+//            cout<<"i = "<<i<<" and j= "<<j<<endl;
+//            cout<<"roundkey[i][j] = "<<roundKey[i][j]<<endl;
+//            cout<<"state[i][j] = "<<state[i][j]<<endl;
+//            cout<<"here 22"<<endl;
+
             HexToBinary(stoi(roundKey[j][i], nullptr, 16), aBinary);
             HexToBinary(stoi(state[i][j], nullptr, 16), bBinary);
+           // cout<<"here 33"<<endl;
+
+//           cout<<"ab = "<<aBinary<<endl;
+//           cout<<"ab = "<<bBinary<<endl;
 
             string aBinaryString = to_string(aBinary);
             string bBinaryString = to_string(bBinary);
@@ -835,18 +888,18 @@ string** AddRoundKey(string** state, string** roundKey) {
 string** SubByte(string** state, string fromList) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            cout<<"i = "<<i<<" and j = "<<j<<endl;
+            //cout<<"i = "<<i<<" and j = "<<j<<endl;
             int x = stoi(state[i][j].substr(0,1), nullptr, 16);
             int y = stoi(state[i][j].substr(1,1), nullptr, 16);
-            cout<<"x = "<<x<<" and y = "<<y<<endl;
+            //cout<<"x = "<<x<<" and y = "<<y<<endl;
             if(fromList == "SBOX") {
                 state[i][j] = SBOX[x][y];
                 //cout<<"state[i][j] = "<<state[i][j]<<endl;
             }else{
 
                 state[i][j] = ISBOX[x][y];
-                cout<<"ISBOX[i][j] = "<<ISBOX[x][y]<<endl;
-                cout<<" invrser state[i][j] = "<<state[i][j]<<endl;
+                //cout<<"ISBOX[i][j] = "<<ISBOX[x][y]<<endl;
+                //cout<<" invrser state[i][j] = "<<state[i][j]<<endl;
             }
         }
     }
@@ -903,6 +956,15 @@ void PrintArrayDebug(string** state) {
 
 // Hexadecimal to binary conversion
 void HexToBinary(int original, int& binaryValue) {
+    //cout<<"here111"<<endl;
+
+//    HexToBinary(stoi(roundKey[j][i], nullptr, 16), aBinary);
+//    HexToBinary(stoi(state[i][j], nullptr, 16), bBinary);
+
+
+    //cout<<"original = "<<original<<endl;
+
+
     binaryValue = 0;
     int z = 1;
     int remainder;
@@ -914,6 +976,9 @@ void HexToBinary(int original, int& binaryValue) {
         binaryValue = binaryValue+remainder * z;
         z=z*10;
     }
+    //cout<<"returned binary = "<<binaryValue<<endl;
+
+
 }
 
 //Binary string to hex conversion
